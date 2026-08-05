@@ -1,0 +1,13 @@
+[package]
+name = "priva-launch"
+version = "1.0.0"
+description = "PrivaLaunch Smart Contracts in Tolk"
+
+[contracts.priva_launchpad]
+src = "contracts/priva_launchpad.tolk"
+
+[contracts.priva_token]
+src = "contracts/priva_token.tolk"
+
+[contracts.priva_wallet]
+src = "contracts/priva_wallet.tolk"
