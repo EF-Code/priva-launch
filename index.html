@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PrivaLaunch | Anonymous Anti-Sniper Memecoin Launchpad on TON</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <!-- Header Navbar -->
+  <nav class="navbar">
+    <div class="brand">
+      <span>🚀 PrivaLaunch</span>
+    </div>
+    <div class="nav-actions">
+      <div class="badge-zk" id="zkStatusBadge">
+        <span class="dot"></span>
+        <span id="zkStatusText">ZK Unverified</span>
+      </div>
+      <button class="btn btn-primary" id="verifyZkBtn">
+        🔒 Verify Telegram ZK
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero">
+    <h1>Anonymous Anti-Sniper Launchpad on TON</h1>
+    <p>Launch & trade memecoins with 100% creator privacy and zero MEV sniper bots. Guaranteed fair allocations enforced by <strong>zk-tele-auth</strong> zero-knowledge proofs.</p>
+    <div class="hero-buttons">
+      <button class="btn btn-primary" id="launchTokenBtn">
+        ✨ Launch Anonymous Token
+      </button>
+      <a href="#how-it-works" class="btn btn-secondary">
+        📖 How It Works
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container">
+    <div class="grid-layout">
+      <!-- Live Bonding Curve Tokens Feed -->
+      <section class="card">
+        <div class="card-title">
+          <span>🔥 Active Bonding Curve Memecoins</span>
+          <span style="font-size: 12px; color: var(--text-secondary);" id="tokenCount">3 Tokens</span>
+        </div>
+        <div id="tokenFeed">
+          <!-- Rendered via app.js -->
+        </div>
+      </section>
+
+      <!-- Anti-Sniper & Trade Terminal Sidebar -->
+      <aside class="card">
+        <div class="card-title">
+          <span>🛡️ ZK Anti-Sniper Protection</span>
+        </div>
+
+        <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">
+          PrivaLaunch uses <strong>zk-tele-auth</strong> to restrict early bonding curve buys to 1 purchase per real Telegram user. Sybil botnets cannot buy out the supply.
+        </div>
+
+        <div class="form-group">
+          <label>Your Anonymous ZK Nullifier:</label>
+          <div class="creator-nullifier" id="userNullifierDisplay">
+            Unverified (Click 'Verify Telegram ZK')
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Max Buy Allowance Per User:</label>
+          <div style="font-size: 16px; font-weight: 700; color: var(--cyan);">
+            50 TON
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- Launch Token Modal -->
+  <div class="modal-overlay hidden" id="launchModal">
+    <div class="modal-content">
+      <button class="close-btn" id="closeLaunchModal">&times;</button>
+      <h2 style="margin-bottom: 16px;">✨ Launch Memecoin Anonymously</h2>
+      <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 20px;">
+        Your wallet address will NOT be linked to this token. Only your anonymous zk-tele-auth nullifier hash will be registered as creator.
+      </p>
+
+      <form id="createTokenForm">
+        <div class="form-group">
+          <label>Token Name:</label>
+          <input type="text" id="tokenNameInput" placeholder="e.g. TeleResistor" required>
+        </div>
+
+        <div class="form-group">
+          <label>Ticker Symbol:</label>
+          <input type="text" id="tokenSymbolInput" placeholder="e.g. TRES" required>
+        </div>
+
+        <div class="form-group">
+          <label>Description:</label>
+          <textarea id="tokenDescInput" rows="3" placeholder="Explain the memecoin lore..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Emoji Avatar:</label>
+          <input type="text" id="tokenEmojiInput" value="⚡" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+          🚀 Deploy Bonding Curve Contract
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="src/app.js" type="module"></script>
+</body>
+</html>
