@@ -23,7 +23,7 @@ const initialTokens = [
     symbol: 'ZKR',
     desc: 'Community privacy token powering ZK mixers and stealth channels.',
     emoji: '🛡️',
-    raisedTon: 78.0, // Graduating soon!
+    raisedTon: 78.0,
     creatorNullifier: '0x1c4d9e...8a2b',
     holders: 210,
     createdAt: Date.now() - 86400000 * 2
@@ -58,6 +58,20 @@ class PrivaLaunchApp {
     });
   }
 
+  showToast(message) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.remove();
+    }, 4000);
+  }
+
   bindEvents() {
     const verifyZkBtn = document.getElementById('verifyZkBtn');
     const connectWalletBtn = document.getElementById('connectWalletBtn');
@@ -81,20 +95,20 @@ class PrivaLaunchApp {
       walletModal?.classList.add('hidden');
     });
 
-    // Wallet selection cards
     document.querySelectorAll('.wallet-option-card').forEach(card => {
       card.addEventListener('click', async (e) => {
         const walletType = e.currentTarget.getAttribute('data-wallet');
         if (walletType) {
           await tonWallet.connectWallet(walletType);
           walletModal?.classList.add('hidden');
+          this.showToast(`💎 Connected to ${walletType}!`);
         }
       });
     });
 
     launchTokenBtn?.addEventListener('click', () => {
       if (!zkAuth.isVerified) {
-        alert('Please click "Verify Telegram ZK" first before launching an anonymous token!');
+        this.showToast('Please click "Verify Telegram ZK" first before launching an anonymous token!');
         return;
       }
       launchModal?.classList.remove('hidden');
@@ -109,7 +123,6 @@ class PrivaLaunchApp {
       this.handleCreateToken();
     });
 
-    // Filter tabs
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -119,7 +132,6 @@ class PrivaLaunchApp {
       });
     });
 
-    // Search input
     searchInput?.addEventListener('input', (e) => {
       this.searchQuery = e.target.value.toLowerCase().trim();
       this.renderFeed();
@@ -168,6 +180,7 @@ class PrivaLaunchApp {
       }
 
       if (userNullifierDisplay) userNullifierDisplay.textContent = result.nullifierHash;
+      this.showToast('🛡️ Telegram ZK Proof Verified! Anti-sniper quota active.');
     }
   }
 
@@ -195,7 +208,7 @@ class PrivaLaunchApp {
     document.getElementById('launchModal')?.classList.add('hidden');
     document.getElementById('createTokenForm')?.reset();
 
-    alert(`🎉 Token ${newToken.symbol} deployed anonymously to TON bonding curve!`);
+    this.showToast(`🎉 Token $${newToken.symbol} deployed anonymously to TON bonding curve!`);
   }
 
   getFilteredTokens() {
@@ -214,7 +227,6 @@ class PrivaLaunchApp {
     } else if (this.currentFilter === 'newest') {
       list.sort((a, b) => b.createdAt - a.createdAt);
     } else {
-      // Trending (default)
       list.sort((a, b) => (b.holders * b.raisedTon) - (a.holders * a.raisedTon));
     }
 
@@ -222,9 +234,11 @@ class PrivaLaunchApp {
   }
 
   openTradingTerminal(token) {
-    const terminal = new TradingTerminalComponent(token, () => {
-      this.renderFeed();
-    });
+    const terminal = new TradingTerminalComponent(
+      token, 
+      () => this.renderFeed(),
+      (msg) => this.showToast(msg)
+    );
     terminal.render();
   }
 
@@ -263,7 +277,6 @@ class PrivaLaunchApp {
       `;
     }).join('');
 
-    // Attach card click listeners to open Trading Terminal
     feedEl.querySelectorAll('.token-card').forEach(card => {
       card.addEventListener('click', (e) => {
         const id = card.getAttribute('data-id');
