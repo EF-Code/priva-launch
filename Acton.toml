@@ -1,7 +1,7 @@
 [package]
-name = "priva-launch"
+name = "priva"
 version = "1.0.0"
-description = "PrivaLaunch Smart Contracts in Tolk"
+description = "Priva Smart Contracts in Tolk"
 
 [contracts.priva_launchpad]
 src = "contracts/priva_launchpad.tolk"

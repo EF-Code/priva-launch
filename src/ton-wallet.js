@@ -1,5 +1,5 @@
 /**
- * PrivaLaunch - TON Web3 Wallet & RPC Manager
+ * Priva - TON Web3 Wallet & RPC Manager
  */
 
 export class TonWalletManager {
@@ -16,7 +16,6 @@ export class TonWalletManager {
    * @returns {Promise<{address: string, walletName: string}>}
    */
   async connectWallet(walletType = 'Tonkeeper') {
-    // Simulated TonConnect 2.0 handshake
     const mockAddresses = {
       Tonkeeper: 'EQD1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3',
       MyTonWallet: 'EQB4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6',
@@ -58,7 +57,6 @@ export class TonWalletManager {
 
     console.log('[TonWalletManager] Executing transaction payload:', tx);
 
-    // Query TON Access RPC to verify node connectivity
     try {
       await fetch(this.rpcEndpoint, {
         method: 'POST',

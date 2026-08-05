@@ -1,5 +1,5 @@
 {
-  "name": "priva-launch",
+  "name": "priva",
   "version": "1.0.0",
   "description": "Anonymous Anti-Sniper Memecoin Launchpad on TON powered by zk-tele-auth Zero-Knowledge Proofs",
   "type": "module",

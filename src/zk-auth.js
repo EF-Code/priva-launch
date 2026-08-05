@@ -1,12 +1,12 @@
 /**
- * PrivaLaunch - zk-tele-auth Zero-Knowledge Integration Module
+ * Priva - zk-tele-auth Zero-Knowledge Integration Module
  */
 
 export class PrivaZkAuth {
   constructor() {
     this.isVerified = false;
     this.nullifierHash = null;
-    this.appDomain = 'privalaunch.ton';
+    this.appDomain = 'priva.ton';
   }
 
   /**
@@ -16,7 +16,7 @@ export class PrivaZkAuth {
    */
   async verifyTelegramZk(mockUserId = 987654321) {
     const authDate = Math.floor(Date.now() / 1000) - 120;
-    const salt = 'privalaunch-salt-v1';
+    const salt = 'priva-salt-v1';
 
     // 1. Derive Poseidon SHA256 Nullifier Hash
     const raw = `${mockUserId}:${this.appDomain}:${salt}`;

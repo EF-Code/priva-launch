@@ -1,5 +1,5 @@
 /**
- * PrivaLaunch - Enterprise Trading Terminal & Chart Component
+ * Priva - Enterprise Trading Terminal & Chart Component
  */
 
 import { BondingCurveEngine } from '../bonding-curve.js';
@@ -11,7 +11,7 @@ export class TradingTerminalComponent {
     this.token = token;
     this.onClose = onClose;
     this.showToast = showToast;
-    this.activeTab = 'buy'; // 'buy' or 'sell'
+    this.activeTab = 'buy';
     this.timeframe = '5M';
     this.element = null;
   }
@@ -167,7 +167,7 @@ export class TradingTerminalComponent {
         }
 
         const res = await tonWallet.sendTransaction({
-          to: 'EQC_PrivaLaunch_BondingCurve_Address',
+          to: 'EQC_Priva_BondingCurve_Address',
           value: Math.floor(amt * 1e9),
           payload: `op:buy,token:${this.token.symbol}`
         });
@@ -193,7 +193,6 @@ export class TradingTerminalComponent {
 
     ctx.clearRect(0, 0, width, height);
 
-    // Draw Grid Lines
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
     ctx.lineWidth = 1;
     for (let x = 0; x < width; x += 40) {
@@ -209,7 +208,6 @@ export class TradingTerminalComponent {
       ctx.stroke();
     }
 
-    // Draw Price Candles
     const candles = [
       { open: 120, high: 140, low: 110, close: 135 },
       { open: 135, high: 155, low: 130, close: 150 },
@@ -226,13 +224,11 @@ export class TradingTerminalComponent {
       ctx.strokeStyle = isGreen ? '#00e676' : '#ff5252';
       ctx.fillStyle = isGreen ? '#00e676' : '#ff5252';
 
-      // Wick
       ctx.beginPath();
       ctx.moveTo(x, height - c.low);
       ctx.lineTo(x, height - c.high);
       ctx.stroke();
 
-      // Body
       const top = height - Math.max(c.open, c.close);
       const h = Math.abs(c.close - c.open);
       ctx.fillRect(x - 8, top, 16, Math.max(h, 2));
