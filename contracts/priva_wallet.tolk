@@ -18,15 +18,15 @@ fun loadStorage(): JettonWalletStorage {
     };
 }
 
-fun onInternalMessage(msgValue: int, inMsgBody: slice) {
+fun onInternalMessage(_msgValue: int, inMsgBody: slice) {
     if (inMsgBody.isEmpty()) {
         return;
     }
 
-    var op = inMsgBody.loadUint(32);
+    val op = inMsgBody.loadUint(32);
     if (op == 0x0f817053) { // op: transfer_jetton
         var storage = loadStorage();
-        var amount = inMsgBody.loadCoins();
+        val amount = inMsgBody.loadCoins();
         assert(storage.balance >= amount) throw 705;
         storage.balance -= amount;
         contract.setData(contract.getData());
@@ -34,6 +34,6 @@ fun onInternalMessage(msgValue: int, inMsgBody: slice) {
 }
 
 get fun getWalletData(): (int, address, address, cell) {
-    var storage = loadStorage();
+    val storage = loadStorage();
     return (storage.balance, storage.ownerAddress, storage.jettonMasterAddress, storage.jettonWalletCode);
 }

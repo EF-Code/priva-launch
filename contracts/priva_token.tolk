@@ -28,18 +28,18 @@ fun saveStorage(storage: JettonMasterStorage) {
     contract.setData(b.endCell());
 }
 
-fun onInternalMessage(msgValue: int, inMsgBody: slice) {
+fun onInternalMessage(_msgValue: int, inMsgBody: slice) {
     if (inMsgBody.isEmpty()) {
         return;
     }
 
-    var op = inMsgBody.loadUint(32);
-    var queryId = inMsgBody.loadUint(64);
+    val op = inMsgBody.loadUint(32);
+    var _queryId = inMsgBody.loadUint(64);
 
     if (op == 21) { // op: mint_jetton
-        var toAddress = inMsgBody.loadAddress();
-        var tonAmount = inMsgBody.loadCoins();
-        var jettonAmount = inMsgBody.loadCoins();
+        var _toAddress = inMsgBody.loadAddress();
+        var _tonAmount = inMsgBody.loadCoins();
+        val jettonAmount = inMsgBody.loadCoins();
 
         var storage = loadStorage();
         storage.totalSupply += jettonAmount;
@@ -51,6 +51,6 @@ fun onInternalMessage(msgValue: int, inMsgBody: slice) {
 }
 
 get fun getJettonData(): (int, int, address, cell, cell) {
-    var storage = loadStorage();
+    val storage = loadStorage();
     return (-1, storage.totalSupply, storage.adminAddress, storage.contentCell, storage.jettonWalletCode);
 }

@@ -36,13 +36,13 @@ fun onInternalMessage(msgValue: int, inMsgBody: slice) {
         return;
     }
 
-    var op = inMsgBody.loadUint(32);
-    var queryId = inMsgBody.loadUint(64);
+    val op = inMsgBody.loadUint(32);
+    var _queryId = inMsgBody.loadUint(64);
 
     if (op == 0x70726976) { // op: buy_bonding_curve
-        var userNullifierHash = inMsgBody.loadUint(256);
-        var zkProofRef = inMsgBody.loadRef();
-        var zkProofSlice = zkProofRef.beginParse();
+        var _userNullifierHash = inMsgBody.loadUint(256);
+        val zkProofRef = inMsgBody.loadRef();
+        var _zkProofSlice = zkProofRef.beginParse();
 
         // Enforce Anti-Sniper ZK Buy Limit (Max 50 TON per unique Telegram ZK Nullifier)
         assert(msgValue <= 50000000000) throw 201; // 50 TON max
@@ -70,6 +70,6 @@ fun migrateLiquidityToDeDust() {
 }
 
 get fun getLaunchpadDetails(): (int, int, bool) {
-    var storage = loadStorage();
+    val storage = loadStorage();
     return (storage.creatorNullifierHash, storage.totalTonRaised, storage.isGraduated);
 }
