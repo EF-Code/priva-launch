@@ -20,8 +20,11 @@
         <span class="dot"></span>
         <span id="zkStatusText">ZK Unverified</span>
       </div>
-      <button class="btn btn-primary" id="verifyZkBtn">
+      <button class="btn btn-secondary" id="verifyZkBtn">
         🔒 Verify Telegram ZK
+      </button>
+      <button class="btn btn-primary" id="connectWalletBtn">
+        💎 Connect Wallet
       </button>
     </div>
   </nav>
@@ -42,6 +45,16 @@
 
   <!-- Main Container -->
   <main class="container">
+    <!-- Filter & Search Bar -->
+    <div class="filter-bar">
+      <div class="filter-tabs">
+        <button class="filter-btn active" data-filter="trending">🔥 Trending</button>
+        <button class="filter-btn" data-filter="graduating">⚡ Graduating Soon</button>
+        <button class="filter-btn" data-filter="newest">✨ Newest</button>
+      </div>
+      <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search token name or symbol...">
+    </div>
+
     <div class="grid-layout">
       <!-- Live Bonding Curve Tokens Feed -->
       <section class="card">
@@ -75,6 +88,13 @@
           <label>Max Buy Allowance Per User:</label>
           <div style="font-size: 16px; font-weight: 700; color: var(--cyan);">
             50 TON
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Connected Wallet:</label>
+          <div class="wallet-display-box" id="walletDisplayBox">
+            Not Connected
           </div>
         </div>
       </aside>
@@ -115,6 +135,32 @@
           🚀 Deploy Bonding Curve Contract
         </button>
       </form>
+    </div>
+  </div>
+
+  <!-- Wallet Connection Modal -->
+  <div class="modal-overlay hidden" id="walletModal">
+    <div class="modal-content">
+      <button class="close-btn" id="closeWalletModal">&times;</button>
+      <h2 style="margin-bottom: 16px;">💎 Connect TON Wallet</h2>
+      <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 20px;">
+        Connect your preferred TON wallet to execute bonding curve purchases and trades.
+      </p>
+
+      <div class="wallet-option-list">
+        <div class="wallet-option-card" data-wallet="Tonkeeper">
+          <span>💎 Tonkeeper</span>
+          <span class="badge-tag">Popular</span>
+        </div>
+        <div class="wallet-option-card" data-wallet="MyTonWallet">
+          <span>⚡ MyTonWallet</span>
+          <span class="badge-tag">Fast</span>
+        </div>
+        <div class="wallet-option-card" data-wallet="OpenMask">
+          <span>🛡️ OpenMask</span>
+          <span class="badge-tag">Extension</span>
+        </div>
+      </div>
     </div>
   </div>
 
