@@ -2,11 +2,13 @@
   "name": "priva-launch",
   "version": "1.0.0",
   "description": "Anonymous Anti-Sniper Memecoin Launchpad on TON powered by zk-tele-auth Zero-Knowledge Proofs",
-  "main": "src/app.js",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test": "node scripts/run-tests.js"
+    "preview": "vite preview",
+    "test": "node scripts/run-tests.cjs",
+    "compile-contracts": "node scripts/compile-contracts.cjs"
   },
   "keywords": [
     "ton",
@@ -21,5 +23,8 @@
     "tolk"
   ],
   "author": "ef-code",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.2.0"
+  }
 }
