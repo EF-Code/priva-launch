@@ -134,6 +134,3 @@ npm test
 
 ---
 
-## 6. License
-
-MIT License. Copyright (c) 2026 ef-code.
