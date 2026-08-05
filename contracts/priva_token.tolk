@@ -1,4 +1,4 @@
-// Tolk 1.2 TEP-74 Jetton Master Smart Contract for PrivaLaunch
+// Tolk 1.4 TEP-74 Jetton Master Smart Contract for PrivaLaunch
 
 struct JettonMasterStorage {
     totalSupply: coins,
@@ -9,7 +9,7 @@ struct JettonMasterStorage {
 
 @inline
 fun loadStorage(): JettonMasterStorage {
-    var cs = getContractData().beginParse();
+    var cs = contract.getData().beginParse();
     return JettonMasterStorage{
         totalSupply: cs.loadCoins(),
         adminAddress: cs.loadAddress(),
@@ -25,11 +25,11 @@ fun saveStorage(storage: JettonMasterStorage) {
     b.storeAddress(storage.adminAddress);
     b.storeRef(storage.contentCell);
     b.storeRef(storage.jettonWalletCode);
-    setContractData(b.endCell());
+    contract.setData(b.endCell());
 }
 
 fun onInternalMessage(msgValue: int, inMsgBody: slice) {
-    if (inMsgBody.isSliceEmpty()) {
+    if (inMsgBody.isEmpty()) {
         return;
     }
 

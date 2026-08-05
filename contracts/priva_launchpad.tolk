@@ -1,4 +1,4 @@
-// Tolk 1.2 PrivaLaunch Bonding Curve & Anti-Sniper Contract for TON
+// Tolk 1.4 PrivaLaunch Bonding Curve & Anti-Sniper Contract for TON
 
 struct LaunchpadStorage {
     ownerAddress: address,
@@ -10,7 +10,7 @@ struct LaunchpadStorage {
 
 @inline
 fun loadStorage(): LaunchpadStorage {
-    var cs = getContractData().beginParse();
+    var cs = contract.getData().beginParse();
     return LaunchpadStorage{
         ownerAddress: cs.loadAddress(),
         creatorNullifierHash: cs.loadUint(256),
@@ -28,11 +28,11 @@ fun saveStorage(storage: LaunchpadStorage) {
     b.storeCoins(storage.totalTonRaised);
     b.storeUint(storage.isGraduated ? 1 : 0, 1);
     b.storeUint(storage.nullifierPurchasesRoot, 256);
-    setContractData(b.endCell());
+    contract.setData(b.endCell());
 }
 
 fun onInternalMessage(msgValue: int, inMsgBody: slice) {
-    if (inMsgBody.isSliceEmpty()) {
+    if (inMsgBody.isEmpty()) {
         return;
     }
 
@@ -41,9 +41,10 @@ fun onInternalMessage(msgValue: int, inMsgBody: slice) {
 
     if (op == 0x70726976) { // op: buy_bonding_curve
         var userNullifierHash = inMsgBody.loadUint(256);
-        var zkProofSlice = inMsgBody.loadRef().beginParse();
+        var zkProofRef = inMsgBody.loadRef();
+        var zkProofSlice = zkProofRef.beginParse();
 
-        // 1. Enforce Anti-Sniper ZK Buy Limit (Max 50 TON per unique Telegram ZK Nullifier)
+        // Enforce Anti-Sniper ZK Buy Limit (Max 50 TON per unique Telegram ZK Nullifier)
         assert(msgValue <= 50000000000) throw 201; // 50 TON max
 
         var storage = loadStorage();

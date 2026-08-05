@@ -1,4 +1,4 @@
-// Tolk 1.2 TEP-74 Jetton Wallet Smart Contract for PrivaLaunch
+// Tolk 1.4 TEP-74 Jetton Wallet Smart Contract for PrivaLaunch
 
 struct JettonWalletStorage {
     balance: coins,
@@ -9,7 +9,7 @@ struct JettonWalletStorage {
 
 @inline
 fun loadStorage(): JettonWalletStorage {
-    var cs = getContractData().beginParse();
+    var cs = contract.getData().beginParse();
     return JettonWalletStorage{
         balance: cs.loadCoins(),
         ownerAddress: cs.loadAddress(),
@@ -19,7 +19,9 @@ fun loadStorage(): JettonWalletStorage {
 }
 
 fun onInternalMessage(msgValue: int, inMsgBody: slice) {
-    if (inMsgBody.isSliceEmpty()) return;
+    if (inMsgBody.isEmpty()) {
+        return;
+    }
 
     var op = inMsgBody.loadUint(32);
     if (op == 0x0f817053) { // op: transfer_jetton
@@ -27,7 +29,7 @@ fun onInternalMessage(msgValue: int, inMsgBody: slice) {
         var amount = inMsgBody.loadCoins();
         assert(storage.balance >= amount) throw 705;
         storage.balance -= amount;
-        setContractData(getContractData());
+        contract.setData(contract.getData());
     }
 }
 
