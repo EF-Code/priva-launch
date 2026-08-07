@@ -3,27 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Priva | Enterprise Anonymous Anti-Sniper Memecoin Launchpad on TON</title>
+  <title>Priva | TON Launchpad Interface Prototype</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <!-- Live Market Ticker Bar -->
+  <!-- Demo metrics bar -->
   <div class="ticker-bar">
     <div class="ticker-item">
-      <span>TON Price:</span> <strong id="tickerTonPrice">$6.42</strong>
+      <span>Illustrative TON price:</span> <strong id="tickerTonPrice">$6.42</strong>
     </div>
     <div class="ticker-item">
-      <span>Total Protocol Volume (24h):</span> <strong id="tickerVolume">$482,910</strong>
+      <span>Example daily volume:</span> <strong id="tickerVolume">$482,910</strong>
     </div>
     <div class="ticker-item">
-      <span>DeDust Graduated Tokens:</span> <strong id="tickerGraduated">18 Tokens</strong>
+      <span>Example graduated tokens:</span> <strong id="tickerGraduated">18 Tokens</strong>
     </div>
     <div class="ticker-item">
-      <span>Active Anti-Sniper Nullifiers:</span> <strong id="tickerNullifiers">1,409 Unique ZK Users</strong>
+      <span>Example identity count:</span> <strong id="tickerNullifiers">1,409 users</strong>
     </div>
+  </div>
+
+  <div class="demo-notice" role="status">
+    <strong>Demo-only prototype.</strong> No wallet is connected, no Telegram identity or ZK proof is verified, and no transaction, token, or liquidity pool is created by this interface.
   </div>
 
   <!-- Header Navbar -->
@@ -34,27 +38,27 @@
     <div class="nav-actions">
       <div class="badge-zk" id="zkStatusBadge">
         <span class="dot"></span>
-        <span id="zkStatusText">ZK Unverified</span>
+        <span id="zkStatusText">Demo identity inactive</span>
       </div>
       <button class="btn btn-secondary" id="verifyZkBtn">
-        🔒 Verify Telegram ZK
+        🔒 Enable demo identity
       </button>
       <button class="btn btn-primary" id="connectWalletBtn">
-        💎 Connect Wallet
+        💎 Select demo wallet
       </button>
     </div>
   </nav>
 
   <!-- Hero Section -->
   <header class="hero">
-    <h1>Anonymous Anti-Sniper Launchpad on TON</h1>
-    <p>Launch & trade memecoins with 100% creator privacy and zero MEV sniper bots. Guaranteed fair allocations enforced by <strong>zk-tele-auth</strong> zero-knowledge proofs and TVM smart contracts.</p>
+    <h1>TON Launchpad Interface Prototype</h1>
+    <p>Explore a possible launchpad experience using simulated tokens, wallet state, prices, and trades. This build has no real chain, wallet, Telegram, or zero-knowledge integration.</p>
     <div class="hero-buttons">
       <button class="btn btn-primary" id="launchTokenBtn">
-        ✨ Launch Anonymous Token
+        ✨ Simulate token launch
       </button>
       <a href="#how-it-works" class="btn btn-secondary" id="howItWorksBtn">
-        📖 Protocol Specs
+        📖 Demo status
       </a>
     </div>
   </header>
@@ -72,10 +76,10 @@
     </div>
 
     <div class="grid-layout">
-      <!-- Live Bonding Curve Tokens Feed -->
+    <!-- Simulated bonding curve token feed -->
       <section class="card">
         <div class="card-title">
-          <span>🔥 Active Bonding Curve Memecoins</span>
+          <span>🔥 Simulated Bonding-Curve Tokens</span>
           <span style="font-size: 12px; color: var(--text-secondary);" id="tokenCount">3 Tokens</span>
         </div>
         <div class="token-grid" id="tokenFeed">
@@ -83,47 +87,47 @@
         </div>
       </section>
 
-      <!-- Anti-Sniper & Trade Terminal Sidebar -->
+      <!-- Demo state sidebar -->
       <aside class="card">
         <div class="card-title">
-          <span>🛡️ ZK Anti-Sniper Protection</span>
+          <span>🛡️ Planned Anti-Sniper Design</span>
         </div>
 
         <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">
-          Priva uses <strong>zk-tele-auth</strong> to restrict early bonding curve buys to 1 purchase per real Telegram user. Sybil botnets cannot buy out the supply.
+          This screen illustrates an intended identity-gated allocation flow. It does not authenticate Telegram users, create ZK proofs, or enforce an allocation limit.
         </div>
 
         <div class="form-group">
-          <label>Your Anonymous ZK Nullifier:</label>
+          <label>Demo identity value:</label>
           <div class="creator-nullifier" id="userNullifierDisplay">
-            Unverified (Click 'Verify Telegram ZK')
+            Inactive (click “Enable demo identity”)
           </div>
         </div>
 
         <div class="form-group">
-          <label>Max Buy Allowance Per User:</label>
+          <label>Illustrative buy allowance:</label>
           <div style="font-size: 16px; font-weight: 700; color: var(--cyan);">
             50 TON
           </div>
         </div>
 
         <div class="form-group">
-          <label>Connected Wallet:</label>
+          <label>Demo wallet selection:</label>
           <div class="wallet-display-box" id="walletDisplayBox">
-            Not Connected
+            No demo wallet selected
           </div>
         </div>
       </aside>
     </div>
   </main>
 
-  <!-- Launch Token Modal -->
+  <!-- Simulated launch modal -->
   <div class="modal-overlay hidden" id="launchModal">
     <div class="modal-content">
       <button class="close-btn" id="closeLaunchModal">&times;</button>
-      <h2 style="margin-bottom: 16px;">✨ Launch Memecoin Anonymously</h2>
+      <h2 style="margin-bottom: 16px;">✨ Simulate Token Launch</h2>
       <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 20px;">
-        Your wallet address will NOT be linked to this token. Only your anonymous zk-tele-auth nullifier hash will be registered as creator.
+        This form only adds a token card to your local browser session. It does not deploy a contract, register an identity, preserve anonymity, or create a token.
       </p>
 
       <form id="createTokenForm">
@@ -148,19 +152,19 @@
         </div>
 
         <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
-          🚀 Deploy Bonding Curve Contract
+          🚀 Add simulated token
         </button>
       </form>
     </div>
   </div>
 
-  <!-- Wallet Connection Modal -->
+  <!-- Demo wallet selection modal -->
   <div class="modal-overlay hidden" id="walletModal">
     <div class="modal-content">
       <button class="close-btn" id="closeWalletModal">&times;</button>
-      <h2 style="margin-bottom: 16px;">💎 Connect TON Wallet</h2>
+      <h2 style="margin-bottom: 16px;">💎 Select Demo Wallet</h2>
       <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 20px;">
-        Connect your preferred TON wallet to execute bonding curve purchases and trades.
+        This selection is cosmetic. It does not invoke TonConnect, access a wallet, request a signature, or submit a transaction.
       </p>
 
       <div class="wallet-option-list">

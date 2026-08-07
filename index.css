@@ -50,6 +50,18 @@ body {
   color: var(--cyan);
 }
 
+.demo-notice {
+  max-width: 1100px;
+  margin: 12px auto 0;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 193, 7, 0.45);
+  border-radius: 8px;
+  background: rgba(255, 193, 7, 0.1);
+  color: #ffe29a;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 /* Header Navbar */
 .navbar {
   display: flex;

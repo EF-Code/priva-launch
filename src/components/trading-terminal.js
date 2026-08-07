@@ -1,5 +1,5 @@
 /**
- * Priva - Enterprise Trading Terminal & Chart Component
+ * Priva - Demo Trading Terminal & Chart Component
  */
 
 import { BondingCurveEngine } from '../bonding-curve.js';
@@ -33,7 +33,7 @@ export class TradingTerminalComponent {
           </div>
           <div class="token-price-box">
             <div class="price-val">${BondingCurveEngine.getPricePerToken(this.token.raisedTon).toFixed(9)} TON</div>
-            <div class="grad-pct">DeDust Graduation: ${BondingCurveEngine.getGraduationPercentage(this.token.raisedTon)}%</div>
+            <div class="grad-pct">Illustrative graduation: ${BondingCurveEngine.getGraduationPercentage(this.token.raisedTon)}%</div>
           </div>
         </div>
 
@@ -51,7 +51,7 @@ export class TradingTerminalComponent {
             <canvas id="priceChartCanvas" width="480" height="220"></canvas>
 
             <div class="orderbook-box">
-              <div style="font-weight: 700; margin-bottom: 6px; color: var(--text-secondary);">Live Order Stream</div>
+              <div style="font-weight: 700; margin-bottom: 6px; color: var(--text-secondary);">Illustrative Order Stream</div>
               <div class="orderbook-row ask"><span>0.000000089 TON</span> <span>12,400 $${this.token.symbol}</span> <span>ASK</span></div>
               <div class="orderbook-row ask"><span>0.000000087 TON</span> <span>45,000 $${this.token.symbol}</span> <span>ASK</span></div>
               <div class="orderbook-row bid"><span>0.000000085 TON</span> <span>89,200 $${this.token.symbol}</span> <span>BID</span></div>
@@ -66,7 +66,7 @@ export class TradingTerminalComponent {
             </div>
 
             <div class="form-group" style="margin-top: 16px;">
-              <label id="inputAmountLabel">Amount in TON (Max 50 TON):</label>
+              <label id="inputAmountLabel">Illustrative amount in TON (example cap: 50 TON):</label>
               <input type="number" id="tradeAmountInput" value="5" step="0.5" min="0.1">
             </div>
 
@@ -81,7 +81,7 @@ export class TradingTerminalComponent {
             </div>
 
             <button class="btn btn-primary" id="executeTradeBtn" style="width: 100%; margin-top: 18px;">
-              Buy $${this.token.symbol}
+              Simulate buy $${this.token.symbol}
             </button>
           </div>
         </div>
@@ -134,8 +134,8 @@ export class TradingTerminalComponent {
       this.activeTab = 'buy';
       tabBuy.classList.add('active');
       tabSell.classList.remove('active');
-      inputAmountLabel.textContent = 'Amount in TON (Max 50 TON):';
-      executeTradeBtn.textContent = `Buy $${this.token.symbol}`;
+      inputAmountLabel.textContent = 'Illustrative amount in TON (example cap: 50 TON):';
+      executeTradeBtn.textContent = `Simulate buy $${this.token.symbol}`;
       updateEstimate();
     });
 
@@ -143,26 +143,26 @@ export class TradingTerminalComponent {
       this.activeTab = 'sell';
       tabSell.classList.add('active');
       tabBuy.classList.remove('active');
-      inputAmountLabel.textContent = `Amount in $${this.token.symbol}:`;
-      executeTradeBtn.textContent = `Sell $${this.token.symbol}`;
+      inputAmountLabel.textContent = `Illustrative amount in $${this.token.symbol}:`;
+      executeTradeBtn.textContent = `Simulate sell $${this.token.symbol}`;
       updateEstimate();
     });
 
     executeTradeBtn.addEventListener('click', async () => {
       if (!zkAuth.isVerified) {
-        if (this.showToast) this.showToast('Verification Required: Click "Verify Telegram ZK" first!');
+        if (this.showToast) this.showToast('Demo identity required: enable it to simulate a trade.');
         return;
       }
 
       if (!tonWallet.isConnected) {
-        if (this.showToast) this.showToast('Wallet Required: Click "Connect Wallet" first!');
+        if (this.showToast) this.showToast('Demo wallet required: select one to simulate a trade.');
         return;
       }
 
       const amt = parseFloat(tradeAmountInput.value || '0');
       if (this.activeTab === 'buy') {
         if (!zkAuth.canBuyAmount(amt)) {
-          if (this.showToast) this.showToast('❌ Anti-Sniper Limit: Max 50 TON buy per unique ZK user.');
+          if (this.showToast) this.showToast('❌ Demo cap: example maximum is 50 TON per simulated identity.');
           return;
         }
 
@@ -174,11 +174,11 @@ export class TradingTerminalComponent {
 
         this.token.raisedTon += amt;
         this.token.holders += 1;
-        if (this.showToast) this.showToast(`✅ Tx Executed! Hash: ${res.hash.substring(0, 14)}...`);
+        if (this.showToast) this.showToast(`✅ Simulated trade recorded locally. Example ID: ${res.hash.substring(0, 14)}...`);
         modal.remove();
         if (this.onClose) this.onClose();
       } else {
-        if (this.showToast) this.showToast(`✅ Sold ${amt.toLocaleString()} $${this.token.symbol}!`);
+        if (this.showToast) this.showToast(`✅ Simulated sale of ${amt.toLocaleString()} $${this.token.symbol}; no token was transferred.`);
         modal.remove();
         if (this.onClose) this.onClose();
       }

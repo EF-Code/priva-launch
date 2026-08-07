@@ -4,13 +4,13 @@ import { tonWallet } from './ton-wallet.js';
 import { telegramApp } from './telegram-app.js';
 import { TradingTerminalComponent } from './components/trading-terminal.js';
 
-// Initial production-grade bonding curve memecoins
+// Illustrative, in-memory demo tokens. These do not exist on TON.
 const initialTokens = [
   {
     id: 'token-1',
     name: 'Teleton Agent Token',
     symbol: 'TELE',
-    desc: 'Autonomous AI Agent currency for Telegram & TON. Fair launch enforced by zk-tele-auth.',
+    desc: 'Illustrative token card for the launchpad interface prototype.',
     emoji: '🤖',
     raisedTon: 62.5,
     creatorNullifier: '0x8f2a1b...3e4f',
@@ -101,14 +101,14 @@ class PrivaLaunchApp {
         if (walletType) {
           await tonWallet.connectWallet(walletType);
           walletModal?.classList.add('hidden');
-          this.showToast(`💎 Connected to ${walletType}!`);
+          this.showToast(`💎 ${walletType} selected for the demo. No wallet was connected.`);
         }
       });
     });
 
     launchTokenBtn?.addEventListener('click', () => {
       if (!zkAuth.isVerified) {
-        this.showToast('Please click "Verify Telegram ZK" first before launching an anonymous token!');
+        this.showToast('Enable the demo identity first to simulate a token launch. No identity is verified.');
         return;
       }
       launchModal?.classList.remove('hidden');
@@ -145,11 +145,11 @@ class PrivaLaunchApp {
 
       if (isConnected && address) {
         const shortAddr = `${address.substring(0, 6)}...${address.slice(-4)}`;
-        if (connectWalletBtn) connectWalletBtn.textContent = `💎 ${shortAddr}`;
-        if (walletDisplayBox) walletDisplayBox.textContent = `${walletName}: ${shortAddr}`;
+        if (connectWalletBtn) connectWalletBtn.textContent = `💎 Demo: ${shortAddr}`;
+        if (walletDisplayBox) walletDisplayBox.textContent = `${walletName} demo: ${shortAddr}`;
       } else {
-        if (connectWalletBtn) connectWalletBtn.textContent = '💎 Connect Wallet';
-        if (walletDisplayBox) walletDisplayBox.textContent = 'Not Connected';
+        if (connectWalletBtn) connectWalletBtn.textContent = '💎 Select demo wallet';
+        if (walletDisplayBox) walletDisplayBox.textContent = 'No demo wallet selected';
       }
     });
   }
@@ -165,12 +165,12 @@ class PrivaLaunchApp {
     const zkStatusBadge = document.getElementById('zkStatusBadge');
     const userNullifierDisplay = document.getElementById('userNullifierDisplay');
 
-    if (zkStatusText) zkStatusText.textContent = 'Generating ZK Proof...';
+    if (zkStatusText) zkStatusText.textContent = 'Creating demo identity...';
 
     const result = await zkAuth.verifyTelegramZk();
 
     if (result.isVerified) {
-      if (zkStatusText) zkStatusText.textContent = 'ZK Verified';
+      if (zkStatusText) zkStatusText.textContent = 'Demo identity active';
       if (zkStatusBadge) {
         zkStatusBadge.style.borderColor = 'rgba(0, 230, 118, 0.4)';
         zkStatusBadge.style.background = 'rgba(0, 230, 118, 0.15)';
@@ -180,7 +180,7 @@ class PrivaLaunchApp {
       }
 
       if (userNullifierDisplay) userNullifierDisplay.textContent = result.nullifierHash;
-      this.showToast('🛡️ Telegram ZK Proof Verified! Anti-sniper quota active.');
+      this.showToast('🛡️ Demo identity enabled. No Telegram verification, ZK proof, or allocation limit is active.');
     }
   }
 
@@ -208,7 +208,7 @@ class PrivaLaunchApp {
     document.getElementById('launchModal')?.classList.add('hidden');
     document.getElementById('createTokenForm')?.reset();
 
-    this.showToast(`🎉 Token $${newToken.symbol} deployed anonymously to TON bonding curve!`);
+    this.showToast(`🎉 Simulated $${newToken.symbol} added locally. No contract or token was deployed.`);
   }
 
   getFilteredTokens() {
@@ -271,7 +271,7 @@ class PrivaLaunchApp {
             </div>
           </div>
           <button class="btn btn-primary trade-btn" data-id="${token.id}" style="padding: 8px 16px; font-size: 12px; flex-shrink: 0;">
-            Trade $${token.symbol}
+            Explore demo $${token.symbol}
           </button>
         </div>
       `;
