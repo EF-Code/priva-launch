@@ -59,10 +59,11 @@ launchpad and enforce the fixed supply.
 
 ### ZK verifier
 
-The verifier accepts a proof only when public inputs bind the specific
-launchpad, workchain, circuit version, identity nullifier, action nullifier,
-expiry, and intended recipient/action commitment. It is the only identity
-authority; a frontend or relayer cannot replace it.
+The verifier accepts only a `priva_purchase_auth` proof whose public inputs bind
+the specific launchpad, workchain, circuit version, identity nullifier, action
+nullifier, expiry, and intended recipient/action commitment. Its credential is
+issued by a gateway that validates Telegram `initData`; a frontend or relayer
+cannot replace that policy. See the [zk-tele-auth integration contract](ZK_TELE_AUTH_INTEGRATION.md).
 
 ### DeDust adapter
 

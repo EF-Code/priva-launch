@@ -118,7 +118,7 @@ Every create or buy authorization must contain a ZK proof verified by the on-cha
 - an expiry epoch; and
 - the recipient wallet address for a buy, or the creator action commitment for a launch.
 
-The witness demonstrates possession of Telegram-authenticated data whose signature and freshness were validated inside the chosen proof system. The circuit must domain-separate nullifiers; it must not use a frontend-controlled, random, or public constant salt as a substitute for proof verification.
+The witness is issued by the Priva gateway after it validates Telegram-authenticated data server-side. The circuit proves knowledge of the gateway's stable issuer secret while binding a credential to the verifier-pinned issuer commitment and policy. The circuit must domain-separate nullifiers; it must not use a frontend-controlled, random, or public constant salt as a substitute for proof verification. The complete boundary is defined in [the zk-tele-auth integration contract](ZK_TELE_AUTH_INTEGRATION.md).
 
 The launchpad rejects a proof when the verifier fails, its launch/workchain binding differs, its epoch is expired, its action nullifier was consumed, or its identity-nullifier total plus the **accepted** buy amount exceeds the configured cap. The contract marks an action nullifier only after all synchronous validation succeeds. It records the allocation total only for the value it actually accepts.
 
@@ -187,7 +187,7 @@ The following must be fixed in the deployment manifest and reviewed before codin
 
 - Jetton decimal count and raw `S` representation.
 - Fixed-point scale, `P0`, `K`, and rounding tolerance.
-- Exact ZK circuit, proving-system feasibility/cost on TON, Telegram witness-validation design, and verifier-key provenance.
+- Exact `priva_purchase_auth` circuit, proving-system feasibility/cost on TON, and verifier-key provenance.
 - Required gas reserve per inbound/outbound message.
 - DeDust pool version, adapter code hash, LP recipient, and LP lock/escrow policy.
 - Governance multisig members, threshold, pause authority, and future template-governance timelock.

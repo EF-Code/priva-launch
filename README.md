@@ -27,6 +27,9 @@ Do not send TON to an address represented by this project. The UI contains simul
 See the [protocol specification](docs/PROTOCOL_SPEC.md) before treating any component as production-ready.
 The planned [contract architecture](docs/CONTRACT_ARCHITECTURE.md) explains the
 factory, per-launch, jetton, verifier, and DeDust boundaries.
+The [zk-tele-auth integration contract](docs/ZK_TELE_AUTH_INTEGRATION.md)
+describes the gateway-attested private-identity flow this web app will present;
+it is not connected in the current demo.
 
 ## Repository structure
 
