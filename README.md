@@ -1,136 +1,59 @@
-# Priva (priva)
+# Priva
 
-> Anonymous Anti-Sniper Memecoin Launchpad on TON Powered by zk-tele-auth Zero-Knowledge Proofs
+> Demo-only interface prototype for a proposed privacy-preserving TON token launchpad.
 
-Priva is an anonymous, anti-sniper token launchpad and bonding curve trading protocol built for The Open Network (TON). By integrating zk-tele-auth zero-knowledge proofs, Priva solves the core vulnerabilities of traditional token launchpads: front-running by MEV sniper bots and doxxing or harassment of token creators.
+## Status: not safe for deployment or real funds
 
----
+This repository is an early product and contract prototype. It is **not a live TON launchpad**. It does not connect a real wallet, submit signed transactions, verify Telegram identity, generate or verify zero-knowledge proofs, enforce purchase limits on-chain, mint a standards-compliant jetton, or migrate liquidity to DeDust.
 
-## 1. Core Philosophy and Differences
+Do not send TON to an address represented by this project. The UI contains simulated tokens, balances, trades, wallet selections, charts, and transaction identifiers for product exploration only.
 
-| Feature | Traditional Launchpads (e.g., pump.fun) | Priva |
-| :--- | :--- | :--- |
-| Creator Identity | Public wallet address exposed on-chain | 100% Anonymous (Creator identified solely by ZK Nullifier Hash) |
-| Sniper Bot Resistance | Vulnerable to MEV bots buying supply via 500 dummy wallets | Enforced Anti-Sniper cap (Max 50 TON buy per unique ZK Telegram user) |
-| Sybil Protection | None (multi-wallet farming) | Enforced by Poseidon ZK Nullifier Hash (`hash(userId, appDomain, salt)`) |
-| Liquidity Migration | Migrates to AMM upon target cap | Auto-migrates to DeDust CPMM v2 upon reaching 85 TON raise |
+## What is here today
 
----
+- A Vite single-page interface that demonstrates a possible launchpad flow.
+- Illustrative bonding-curve calculations.
+- Incomplete Tolk contract sketches for a launchpad and jetton components.
+- Minimal JavaScript tests for the pricing helpers.
 
-## 2. System Architecture
+## What must exist before a mainnet launch
 
-```
-+--------------------------------+
-|    Telegram WebApp / Creator   |
-| (Generates zk-tele-auth Proof) |
-+---------------+----------------+
-                |
-                v
-+--------------------------------+
-|      Priva Frontend & SDK      |
-| (Enforces 50 TON Anti-Sniper)  |
-+---------------+----------------+
-                |
-                v
-+--------------------------------+
-| Tolk 1.4 Smart Contracts (TON) |
-|    (priva_launchpad.tolk)      |
-+---------------+----------------+
-                | (Hits 85 TON Target)
-                v
-+--------------------------------+
-|  DeDust CPMM v2 Liquidity Pool |
-+--------------------------------+
-```
+1. A written protocol specification covering pricing, fees, refunds, migration, privileged roles, and failure paths.
+2. Cryptographically verified Telegram authentication and a real, replay-resistant ZK/nullifier design.
+3. Complete on-chain enforcement of pricing, cumulative allocations, minting, transfers, accounting, and migration.
+4. Authentic TonConnect integration with canonical contract addresses and confirmation tracking.
+5. Full Acton/Tolk compilation and integration testing, fuzz/property testing, testnet validation, and an independent security audit.
+6. Transparent deployment parameters, controlled administrative authority, monitoring, and incident procedures.
 
----
+See the project roadmap before treating any component as production-ready.
 
-## 3. Repository Structure
+## Repository structure
 
 ```
 priva/
-├── package.json                   # Dependencies, scripts, and build rules
-├── Acton.toml                     # Acton TVM contract manifest
-├── index.html                     # Single Page Application HTML layout
-├── index.css                      # Design tokens and CSS layout styling
-├── contracts/
-│   ├── priva_launchpad.tolk       # Tolk 1.4 Bonding Curve Launchpad contract
-│   ├── priva_token.tolk           # Tolk 1.4 TEP-74 Jetton Master contract
-│   └── priva_wallet.tolk          # Tolk 1.4 TEP-74 Jetton Wallet contract
-├── wrappers/
-│   ├── PrivaLaunchpad.gen.tolk    # Auto-generated typed wrapper for PrivaLaunchpad
-│   ├── PrivaToken.gen.tolk        # Auto-generated typed wrapper for PrivaToken
-│   └── PrivaWallet.gen.tolk       # Auto-generated typed wrapper for PrivaWallet
-├── src/
-│   ├── app.js                     # Main application state and feed controller
-│   ├── zk-auth.js                 # zk-tele-auth ZK proof integration module
-│   ├── ton-wallet.js              # TonConnect 2.0 wallet and RPC manager
-│   ├── telegram-app.js            # Telegram MiniApp integration module
-│   ├── bonding-curve.js           # Bonding curve pricing math engine
-│   └── components/
-│       └── trading-terminal.js    # Production Trading Terminal and Chart UI
-├── scripts/
-│   ├── run-tests.cjs              # Test runner script
-│   └── compile-contracts.cjs      # Tolk smart contract compiler script
-└── tests/
-    ├── unit-tests.cjs             # Automated frontend test suite
-    └── launchpad.test.tolk        # Native Acton Tolk contract integration test
+├── contracts/                  # Incomplete Tolk contract prototypes
+├── src/                        # Demo UI and client-side simulation modules
+├── tests/                      # Limited pricing/unit test coverage
+├── scripts/                    # Development helper scripts
+├── Acton.toml                  # Acton contract manifest
+└── index.html                  # Demo interface entry point
 ```
 
----
+## Local development
 
-## 4. Key Components and Functionality
-
-### Client-Side Zero-Knowledge Proof Integration
-When a user launches a token or buys shares on the bonding curve, the application generates a Poseidon SHA-256 nullifier hash locally using the `zk-tele-auth` SDK. This proves the user is a unique, verified Telegram user without exposing their numeric Telegram User ID or personal data to the public or on-chain contracts.
-
-### Anti-Sniper Allocation Cap
-To prevent automated MEV bots from purchasing large portions of the token supply at launch, Priva restricts early bonding curve purchases to a maximum of 50 TON per verified ZK nullifier. Attempting to bypass this limit using multiple wallet addresses fails because each purchase requires a distinct ZK nullifier proof.
-
-### On-Chain Smart Contracts (Tolk 1.4)
-Smart contracts are written in Tolk 1.4 for execution on the TON Virtual Machine (TVM).
-- `priva_launchpad.tolk`: Manages bonding curve state, receives TON deposits, enforces buy limits per nullifier hash, and triggers liquidity migration.
-- `priva_token.tolk`: Standard TEP-74 Jetton Master contract handling token minting.
-- `priva_wallet.tolk`: Standard TEP-74 Jetton Wallet contract handling user balances and transfers.
-
----
-
-## 5. Development and Build Instructions
-
-### Prerequisites
-Node.js (v18 or higher), npm, and Acton CLI (`acton`).
-
-### Installation
-Clone the repository and install dependencies:
+Requirements: Node.js 18+ and npm. Acton is required separately to work with the Tolk sources.
 
 ```bash
-git clone https://github.com/EF-Code/priva.git
-cd priva
 npm install
-```
-
-### Development Server
-Run the local development server with hot module replacement:
-
-```bash
 npm run dev
 ```
 
-### Production Build
-Build the optimized production assets:
+Useful checks:
 
 ```bash
+npm test
 npm run build
-```
-
-### Run Tests and Compile Contracts
-Execute the Acton TVM contract build and unit test suite:
-
-```bash
 acton build
 acton test
-npm test
 ```
 
----
-
+`npm test` currently tests only the JavaScript bonding-curve helper. `npm run compile-contracts` is a placeholder validation script; it does not produce contract artifacts. At the time this notice was added, `acton test` does not run successfully because generated wrappers cannot resolve their `@acton/*` imports.
