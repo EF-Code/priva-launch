@@ -24,7 +24,7 @@ Do not send TON to an address represented by this project. The UI contains simul
 5. Full Acton/Tolk compilation and integration testing, fuzz/property testing, testnet validation, and an independent security audit.
 6. Transparent deployment parameters, controlled administrative authority, monitoring, and incident procedures.
 
-See the project roadmap before treating any component as production-ready.
+See the [protocol specification](docs/PROTOCOL_SPEC.md) before treating any component as production-ready.
 
 ## Repository structure
 
