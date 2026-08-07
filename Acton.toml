@@ -1,13 +1,10 @@
 [package]
 name = "priva"
 version = "1.0.0"
-description = "Priva Smart Contracts in Tolk"
+description = "Priva protocol-boundary scaffolds in Tolk; not deployable"
+
+[contracts.priva_factory]
+src = "contracts/priva_factory.tolk"
 
 [contracts.priva_launchpad]
 src = "contracts/priva_launchpad.tolk"
-
-[contracts.priva_token]
-src = "contracts/priva_token.tolk"
-
-[contracts.priva_wallet]
-src = "contracts/priva_wallet.tolk"

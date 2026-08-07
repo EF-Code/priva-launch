@@ -25,12 +25,14 @@ Do not send TON to an address represented by this project. The UI contains simul
 6. Transparent deployment parameters, controlled administrative authority, monitoring, and incident procedures.
 
 See the [protocol specification](docs/PROTOCOL_SPEC.md) before treating any component as production-ready.
+The planned [contract architecture](docs/CONTRACT_ARCHITECTURE.md) explains the
+factory, per-launch, jetton, verifier, and DeDust boundaries.
 
 ## Repository structure
 
 ```
 priva/
-├── contracts/                  # Incomplete Tolk contract prototypes
+├── contracts/                  # Fail-closed Tolk protocol-boundary scaffolds
 ├── src/                        # Demo UI and client-side simulation modules
 ├── tests/                      # Limited pricing/unit test coverage
 ├── scripts/                    # Development helper scripts
@@ -56,4 +58,4 @@ acton build
 acton test
 ```
 
-`npm test` currently tests only the JavaScript bonding-curve helper. `npm run compile-contracts` is a placeholder validation script; it does not produce contract artifacts. At the time this notice was added, `acton test` does not run successfully because generated wrappers cannot resolve their `@acton/*` imports.
+`npm test` currently tests only the JavaScript bonding-curve helper. `npm run compile-contracts` is a placeholder validation script; it does not produce contract artifacts. The obsolete generated wrappers were removed; native message-level Acton tests must be added with the real implementation before any contract can receive value.
