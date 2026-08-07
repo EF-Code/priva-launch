@@ -4,7 +4,6 @@
 
 import { BondingCurveEngine } from '../bonding-curve.js';
 import { zkAuth } from '../zk-auth.js';
-import { tonWallet } from '../ton-wallet.js';
 
 export class TradingTerminalComponent {
   constructor(token, onClose, showToast) {
@@ -149,32 +148,21 @@ export class TradingTerminalComponent {
     });
 
     executeTradeBtn.addEventListener('click', async () => {
-      if (!zkAuth.isVerified) {
+      if (!zkAuth.isDemoIdentityActive) {
         if (this.showToast) this.showToast('Demo identity required: enable it to simulate a trade.');
-        return;
-      }
-
-      if (!tonWallet.isConnected) {
-        if (this.showToast) this.showToast('Demo wallet required: select one to simulate a trade.');
         return;
       }
 
       const amt = parseFloat(tradeAmountInput.value || '0');
       if (this.activeTab === 'buy') {
-        if (!zkAuth.canBuyAmount(amt)) {
+        if (!zkAuth.canSimulateBuyAmount(amt)) {
           if (this.showToast) this.showToast('❌ Demo cap: example maximum is 50 TON per simulated identity.');
           return;
         }
 
-        const res = await tonWallet.sendTransaction({
-          to: 'EQC_Priva_BondingCurve_Address',
-          value: Math.floor(amt * 1e9),
-          payload: `op:buy,token:${this.token.symbol}`
-        });
-
         this.token.raisedTon += amt;
         this.token.holders += 1;
-        if (this.showToast) this.showToast(`✅ Simulated trade recorded locally. Example ID: ${res.hash.substring(0, 14)}...`);
+        if (this.showToast) this.showToast('✅ Simulated trade recorded locally. No wallet or network request was made.');
         modal.remove();
         if (this.onClose) this.onClose();
       } else {

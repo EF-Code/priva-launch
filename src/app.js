@@ -107,7 +107,7 @@ class PrivaLaunchApp {
     });
 
     launchTokenBtn?.addEventListener('click', () => {
-      if (!zkAuth.isVerified) {
+      if (!zkAuth.isDemoIdentityActive) {
         this.showToast('Enable the demo identity first to simulate a token launch. No identity is verified.');
         return;
       }
@@ -167,9 +167,9 @@ class PrivaLaunchApp {
 
     if (zkStatusText) zkStatusText.textContent = 'Creating demo identity...';
 
-    const result = await zkAuth.verifyTelegramZk();
+    const result = await zkAuth.enableDemoIdentity();
 
-    if (result.isVerified) {
+    if (result.isDemoActive) {
       if (zkStatusText) zkStatusText.textContent = 'Demo identity active';
       if (zkStatusBadge) {
         zkStatusBadge.style.borderColor = 'rgba(0, 230, 118, 0.4)';
@@ -179,7 +179,7 @@ class PrivaLaunchApp {
         if (dot) dot.style.background = '#00e676';
       }
 
-      if (userNullifierDisplay) userNullifierDisplay.textContent = result.nullifierHash;
+      if (userNullifierDisplay) userNullifierDisplay.textContent = result.demoIdentity;
       this.showToast('🛡️ Demo identity enabled. No Telegram verification, ZK proof, or allocation limit is active.');
     }
   }
@@ -197,7 +197,7 @@ class PrivaLaunchApp {
       desc,
       emoji,
       raisedTon: 0.1,
-      creatorNullifier: `${zkAuth.nullifierHash.substring(0, 10)}...${zkAuth.nullifierHash.slice(-6)}`,
+      creatorNullifier: zkAuth.demoIdentity,
       holders: 1,
       createdAt: Date.now()
     };
