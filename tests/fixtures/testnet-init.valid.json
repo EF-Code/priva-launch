@@ -1,0 +1,29 @@
+{
+  "network": "testnet",
+  "status": "reviewed",
+  "sourceRevision": "798ec80f2d000000000000000000000000000000",
+  "launchpadCodeSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "circuit": { "version": 1, "verificationKeySha256": "7454d4f4663b455dd2753dec56acabce5bb662a89a50dc22d22d6c07ad5121e4" },
+  "review": { "approvals": [
+    { "reviewer": "independent-contract-reviewer", "evidenceUrl": "https://example.invalid/reviews/contract" },
+    { "reviewer": "independent-zk-reviewer", "evidenceUrl": "https://example.invalid/reviews/zk" }
+  ] },
+  "policy": {
+    "appDomainHash": "1",
+    "issuerKeyHash": "2",
+    "launchIdHash": "3",
+    "maxTokenAgeSec": "86400",
+    "maxClockSkewSec": "300",
+    "maxAuthorizationTtlSec": "600",
+    "requirePremium": false,
+    "saleTerms": {
+      "jettonMinter": "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c",
+      "priceNanoTonPerSaleUnit": "85",
+      "totalSaleUnits": "1000000000",
+      "rawJettonPerSaleUnit": "1000000000",
+      "identityCapNanoTon": "4250000000",
+      "walletFundingNanoTon": "50000000",
+      "mintMessageValueNanoTon": "50000000"
+    }
+  }
+}

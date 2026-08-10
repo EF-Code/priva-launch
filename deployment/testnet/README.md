@@ -23,3 +23,10 @@ Before creating that manifest, the team must provide:
 Validate a supplied manifest with `npm run check:testnet-manifest --
 deployment/testnet/reviewed-manifest.json`. The command checks shape and public
 integrity only; it does not certify an address, operator, or audit.
+
+Before any StateInit is built, validate its separate reviewed initialization
+record with `npm run check:testnet-init -- deployment/testnet/reviewed-init.json`.
+It pins the address-binding proof ABI, immutable verifier policy, jetton minter and sale
+terms, launchpad code hash, and two public review evidence URLs. The fixture is
+only a structural example; never deploy it or replace independent review with
+placeholder URLs.
