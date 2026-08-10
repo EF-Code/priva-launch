@@ -1,5 +1,6 @@
 import "@zk_tele_auth/priva_purchase_auth_verifier"
 import "@stdlib/exotic-cells"
+import "@stdlib/tvm-dicts"
 
 // Typed, testnet-candidate launchpad ABI.
 //
@@ -19,6 +20,35 @@ enum PrivaTestnetLaunchpadErrors {
     WrongOperation = 905,
     ExpiredAuthorization = 906,
     WrongCircuitVersion = 907
+}
+
+/// Persistent layout for the eventual settled-buy path. It is intentionally
+/// separate from the currently closed handler: state must only be saved in the
+/// same transaction that either mints the exact quoted amount or records a
+/// recoverable pending operation/refund.
+struct PrivaTestnetLaunchpadStorage {
+    soldSaleUnits: uint64
+    acceptedNanoTon: coins
+    usedActionNullifiers: dict
+    identityPurchaseTotals: dict
+}
+
+fun PrivaTestnetLaunchpadStorage.load(): PrivaTestnetLaunchpadStorage {
+    val data = contract.getData();
+    val payload = data.beginParse();
+    if (payload.remainingBitsCount() == 0 && payload.remainingRefsCount() == 0) {
+        return PrivaTestnetLaunchpadStorage {
+            soldSaleUnits: 0,
+            acceptedNanoTon: 0,
+            usedActionNullifiers: createEmptyDict(),
+            identityPurchaseTotals: createEmptyDict(),
+        };
+    }
+    return PrivaTestnetLaunchpadStorage.fromCell(data);
+}
+
+fun PrivaTestnetLaunchpadStorage.save(self) {
+    contract.setData(self.toCell());
 }
 
 struct (0x50525642) PrivaTestnetBuy {
