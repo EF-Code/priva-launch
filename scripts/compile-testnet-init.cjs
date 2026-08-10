@@ -1,0 +1,58 @@
+const fs = require('fs');
+const path = require('path');
+const { Address, beginCell } = require('@ton/core');
+
+const candidate = process.argv[2];
+if (!candidate) throw new Error('Usage: npm run compile:testnet-init -- deployment/testnet/reviewed-init.json');
+const root = path.resolve(__dirname, '..');
+const file = path.resolve(root, candidate);
+if (!file.startsWith(`${root}${path.sep}`)) throw new Error('Initialization manifest path must stay within the repository.');
+const manifest = JSON.parse(fs.readFileSync(file, 'utf8'));
+if (manifest.network !== 'testnet' || manifest.status !== 'reviewed') throw new Error('Only a reviewed testnet initialization manifest may be compiled.');
+
+const u = (value, bits, name) => {
+  if (typeof value !== 'string' || !/^(0|[1-9][0-9]*)$/.test(value)) throw new Error(`${name} must be a canonical decimal string.`);
+  const parsed = BigInt(value);
+  if (parsed >= (1n << BigInt(bits))) throw new Error(`${name} exceeds uint${bits}.`);
+  return parsed;
+};
+const c = (value, name) => u(value, 120, name); // TON Coins is VarUInteger 16, <= 120 bits.
+const policy = manifest.policy || {};
+const sale = policy.saleTerms || {};
+const saleTerms = beginCell()
+  .storeAddress(Address.parse(sale.jettonMinter))
+  .storeCoins(c(sale.priceNanoTonPerSaleUnit, 'priceNanoTonPerSaleUnit'))
+  .storeUint(u(sale.totalSaleUnits, 64, 'totalSaleUnits'), 64)
+  .storeCoins(c(sale.rawJettonPerSaleUnit, 'rawJettonPerSaleUnit'))
+  .storeCoins(c(sale.identityCapNanoTon, 'identityCapNanoTon'))
+  .storeCoins(c(sale.walletFundingNanoTon, 'walletFundingNanoTon'))
+  .storeCoins(c(sale.mintMessageValueNanoTon, 'mintMessageValueNanoTon'))
+  .endCell();
+const policyCell = beginCell()
+  .storeUint(u(policy.appDomainHash, 256, 'appDomainHash'), 256)
+  .storeUint(u(policy.issuerKeyHash, 256, 'issuerKeyHash'), 256)
+  .storeUint(u(policy.launchIdHash, 256, 'launchIdHash'), 256)
+  .storeUint(u(policy.maxTokenAgeSec, 32, 'maxTokenAgeSec'), 32)
+  .storeUint(u(policy.maxClockSkewSec, 32, 'maxClockSkewSec'), 32)
+  .storeUint(u(policy.maxAuthorizationTtlSec, 32, 'maxAuthorizationTtlSec'), 32)
+  .storeBit(policy.requirePremium === true)
+  .storeRef(saleTerms)
+  .endCell();
+const settlement = beginCell().storeDict(null).storeDict(null).endCell();
+const accounting = beginCell()
+  .storeUint(0, 64)
+  .storeCoins(0n)
+  .storeDict(null)
+  .storeDict(null)
+  .storeRef(settlement)
+  .endCell();
+const data = beginCell().storeRef(policyCell).storeRef(accounting).endCell();
+const result = {
+  schemaVersion: 1,
+  initialDataCellHash: data.hash().toString('hex'),
+  initialDataBocBase64: data.toBoc().toString('base64'),
+  policyCellHash: policyCell.hash().toString('hex'),
+  saleTermsCellHash: saleTerms.hash().toString('hex'),
+};
+if (manifest.initialDataCellHash && manifest.initialDataCellHash !== result.initialDataCellHash) throw new Error('Manifest initialDataCellHash does not match its serialized StateInit data.');
+console.log(JSON.stringify(result, null, 2));

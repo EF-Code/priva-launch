@@ -12,7 +12,8 @@
     "compile-contracts": "node scripts/compile-contracts.cjs",
     "check:release": "node scripts/check-release-readiness.cjs",
     "check:testnet-manifest": "node scripts/check-testnet-manifest.cjs",
-    "check:testnet-init": "node scripts/check-testnet-init-manifest.cjs"
+    "check:testnet-init": "node scripts/check-testnet-init-manifest.cjs",
+    "compile:testnet-init": "node scripts/compile-testnet-init.cjs"
   },
   "keywords": [
     "ton",
@@ -29,6 +30,7 @@
   "author": "ef-code",
   "license": "MIT",
   "devDependencies": {
+    "@ton/core": "^0.63.1",
     "vite": "^5.2.0"
   }
 }

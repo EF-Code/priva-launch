@@ -37,6 +37,7 @@ function runTests() {
   runTestnetLifecycleBoundaryTests();
   execFileSync('node', ['scripts/check-testnet-manifest.cjs', 'tests/fixtures/testnet-manifest.valid.json'], { cwd: path.join(__dirname, '..'), stdio: 'inherit' });
   execFileSync('node', ['scripts/check-testnet-init-manifest.cjs', 'tests/fixtures/testnet-init.valid.json'], { cwd: path.join(__dirname, '..'), stdio: 'inherit' });
+  execFileSync('node', ['scripts/compile-testnet-init.cjs', 'tests/fixtures/testnet-init.valid.json'], { cwd: path.join(__dirname, '..'), stdio: 'inherit' });
   return runDeploymentConfigTests().then(runGatewayClientTests);
 
   console.log('\n🎉 All PrivaLaunch Unit Tests Passed Successfully!');

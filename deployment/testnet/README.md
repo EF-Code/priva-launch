@@ -30,3 +30,8 @@ It pins the address-binding proof ABI, immutable verifier policy, jetton minter 
 terms, launchpad code hash, and two public review evidence URLs. The fixture is
 only a structural example; never deploy it or replace independent review with
 placeholder URLs.
+
+`npm run compile:testnet-init -- deployment/testnet/reviewed-init.json` emits
+the exact initial-data cell hash and BOC. The manifest must contain that hash;
+the compiler rejects a mismatch. Pair it with the independently compiled
+launchpad code hash before calculating or funding any contract address.
