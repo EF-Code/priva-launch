@@ -37,6 +37,8 @@ The [gateway and indexer service contract](docs/GATEWAY_AND_INDEXER_SERVICE.md)
 defines the privacy and confirmation boundaries for the future web app.
 The [test strategy](docs/TEST_STRATEGY.md) records current coverage and the
 gates that must pass before mainnet value is accepted.
+The [governance and emergency control policy](docs/GOVERNANCE_AND_EMERGENCY_CONTROL.md)
+limits future privileged actions to user-protective controls.
 
 ## Repository structure
 

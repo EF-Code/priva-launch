@@ -67,6 +67,9 @@ Use an audited, standards-compliant TEP-74 master and derived wallet implementat
 
 Each launch's immutable configuration identifies a governance multisig and a pause authority. Neither may be a single externally owned account.
 
+The complete role boundaries and emergency semantics are defined in the
+[governance and emergency control policy](GOVERNANCE_AND_EMERGENCY_CONTROL.md).
+
 - A pause can reject new buys and creation requests. It must not transfer sale reserves, alter prices, mint tokens, change the verifier, or block an already due refund.
 - Economic changes and code upgrades are prohibited for a deployed launchpad in version 1.
 - If a future version permits factory-template changes, they require a published proposal, a minimum 48-hour timelock, and a multisig threshold recorded in its deployment manifest.
