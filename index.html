@@ -1,193 +1,59 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Priva | TON Launchpad Interface Prototype</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="index.css">
-</head>
-<body>
-  <!-- Demo metrics bar -->
-  <div class="ticker-bar">
-    <div class="ticker-item">
-      <span>Illustrative TON price:</span> <strong id="tickerTonPrice">$6.42</strong>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>Priva — Testnet Launchpad</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <div class="environment-banner" role="status">
+      <span class="signal"></span><strong>TESTNET PREVIEW</strong>
+      <span>Wallet actions stay disabled until a reviewed testnet deployment manifest is loaded.</span>
+      <a href="docs/RELEASE_READINESS.md">Release controls</a>
     </div>
-    <div class="ticker-item">
-      <span>Example daily volume:</span> <strong id="tickerVolume">$482,910</strong>
-    </div>
-    <div class="ticker-item">
-      <span>Example graduated tokens:</span> <strong id="tickerGraduated">18 Tokens</strong>
-    </div>
-    <div class="ticker-item">
-      <span>Example identity count:</span> <strong id="tickerNullifiers">1,409 users</strong>
-    </div>
-  </div>
-
-  <div class="demo-notice" role="status">
-    <strong>Demo-only prototype.</strong> No wallet is connected, no Telegram identity or ZK proof is verified, and no transaction, token, or liquidity pool is created by this interface.
-  </div>
-
-  <!-- Header Navbar -->
-  <nav class="navbar">
-    <div class="brand" id="brandLogo">
-      <span>🚀 Priva</span>
-    </div>
-    <div class="nav-actions">
-      <div class="badge-zk" id="zkStatusBadge">
-        <span class="dot"></span>
-        <span id="zkStatusText">Demo identity inactive</span>
+    <header class="shell-header">
+      <a class="wordmark" href="#top" aria-label="Priva home"><span>p</span>priva</a>
+      <nav aria-label="Main navigation"><a href="#launches">Launches</a><a href="#how-it-works">How it works</a><a href="#security">Security</a></nav>
+      <div class="header-actions">
+        <span class="network-pill"><i></i> TON Testnet</span>
+        <button class="button button-quiet" id="connectWalletBtn" type="button">Connect wallet</button>
       </div>
-      <button class="btn btn-secondary" id="verifyZkBtn">
-        🔒 Enable demo identity
-      </button>
-      <button class="btn btn-primary" id="connectWalletBtn">
-        💎 Select demo wallet
-      </button>
-    </div>
-  </nav>
-
-  <!-- Hero Section -->
-  <header class="hero">
-    <h1>TON Launchpad Interface Prototype</h1>
-    <p>Explore a possible launchpad experience using simulated tokens, wallet state, prices, and trades. This build has no real chain, wallet, Telegram, or zero-knowledge integration.</p>
-    <div class="hero-buttons">
-      <button class="btn btn-primary" id="launchTokenBtn">
-        ✨ Simulate token launch
-      </button>
-      <a href="#how-it-works" class="btn btn-secondary" id="howItWorksBtn">
-        📖 Demo status
-      </a>
-    </div>
-  </header>
-
-  <!-- Main Container -->
-  <main class="container">
-    <!-- Filter & Search Bar -->
-    <div class="filter-bar">
-      <div class="filter-tabs">
-        <button class="filter-btn active" data-filter="trending">🔥 Trending</button>
-        <button class="filter-btn" data-filter="graduating">⚡ Graduating Soon</button>
-        <button class="filter-btn" data-filter="newest">✨ Newest</button>
-      </div>
-      <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search token name, symbol, or lore...">
-    </div>
-
-    <div class="grid-layout">
-    <!-- Simulated bonding curve token feed -->
-      <section class="card">
-        <div class="card-title">
-          <span>🔥 Simulated Bonding-Curve Tokens</span>
-          <span style="font-size: 12px; color: var(--text-secondary);" id="tokenCount">3 Tokens</span>
-        </div>
-        <div class="token-grid" id="tokenFeed">
-          <!-- Rendered via app.js -->
-        </div>
+    </header>
+    <main id="top">
+      <section class="hero shell">
+        <div class="eyebrow">PRIVATE EARLY ACCESS · PUBLIC SETTLEMENT</div>
+        <h1>Launch with a fair<br /><em>first block.</em></h1>
+        <p>Priva is a testnet launch interface for fixed-supply TON launches. Every eventual purchase will be quote-bound, allocation-capped, and confirmed from chain data—not browser state.</p>
+        <div class="hero-actions"><a class="button button-primary" href="#launches">Explore testnet launches <span>→</span></a><button class="button button-quiet" id="openReadinessBtn" type="button">View readiness</button></div>
+        <dl class="hero-stats"><div><dt>85 TON</dt><dd>raise target template</dd></div><div><dt>0%</dt><dd>protocol fee, v1</dd></div><div><dt>5%</dt><dd>maximum identity cap</dd></div></dl>
       </section>
 
-      <!-- Demo state sidebar -->
-      <aside class="card">
-        <div class="card-title">
-          <span>🛡️ Planned Anti-Sniper Design</span>
-        </div>
+      <section class="shell status-grid" id="security">
+        <article class="status-card"><span class="status-icon">01</span><div><small>NETWORK</small><strong id="networkStatus">Manifest required</strong><p>Testnet only. No fallback addresses or RPC endpoints.</p></div></article>
+        <article class="status-card"><span class="status-icon">02</span><div><small>AUTHORIZATION</small><strong>Proof-gated design</strong><p>Purchase proofs bind launch, recipient, action, and expiry.</p></div></article>
+        <article class="status-card"><span class="status-icon">03</span><div><small>SETTLEMENT</small><strong>On-chain quote required</strong><p>The interface never treats a local quote as final.</p></div></article>
+      </section>
 
-        <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">
-          This demo illustrates a gateway-attested <strong>zk-tele-auth</strong> flow. In production, the gateway verifies Telegram data and the launchpad verifies a Priva-bound proof. This screen does not authenticate users, create proofs, or enforce allocations.
-          <a href="docs/ZK_TELE_AUTH_INTEGRATION.md" style="color: var(--cyan);">Read the integration design</a>.
-        </div>
+      <section class="shell launches" id="launches">
+        <div class="section-heading"><div><div class="eyebrow">TESTNET DISCOVERY</div><h2>Launches under observation</h2></div><p>These are interface fixtures until a reviewed indexer endpoint is declared in the deployment manifest.</p></div>
+        <div class="toolbar"><label class="search"><span>⌕</span><input id="searchInput" type="search" placeholder="Search name or ticker" autocomplete="off" /></label><div class="filters" role="group" aria-label="Launch filter"><button data-filter="all" class="selected">All</button><button data-filter="active">Active</button><button data-filter="closing">Closing soon</button></div></div>
+        <div class="launch-grid" id="launchGrid" aria-live="polite"></div>
+      </section>
 
-        <div class="form-group">
-          <label>Demo identity value:</label>
-          <div class="creator-nullifier" id="userNullifierDisplay">
-            Inactive (click “Enable demo identity”)
-          </div>
-        </div>
+      <section class="shell workflow" id="how-it-works">
+        <div><div class="eyebrow">EXECUTION MODEL</div><h2>A transaction is only final when the chain says so.</h2></div>
+        <ol><li><span>01</span><div><strong>Verify eligibility</strong><p>The gateway validates Telegram data and produces a policy-bound authorization.</p></div></li><li><span>02</span><div><strong>Review an exact quote</strong><p>Recipient, expiry, cap and max value are visible before wallet approval.</p></div></li><li><span>03</span><div><strong>Confirm independently</strong><p>Priva matches the finalized transaction to its decoded query ID and destination.</p></div></li></ol>
+      </section>
+    </main>
+    <footer class="shell footer"><a class="wordmark" href="#top"><span>p</span>priva</a><p>Testnet preview. No tokens, proofs, or wallet transactions are available from this build.</p><a href="docs/PROTOCOL_SPEC.md">Protocol specification ↗</a></footer>
 
-        <div class="form-group">
-          <label>Illustrative buy allowance:</label>
-          <div style="font-size: 16px; font-weight: 700; color: var(--cyan);">
-            50 TON
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Demo wallet selection:</label>
-          <div class="wallet-display-box" id="walletDisplayBox">
-            No demo wallet selected
-          </div>
-        </div>
-      </aside>
-    </div>
-  </main>
-
-  <!-- Simulated launch modal -->
-  <div class="modal-overlay hidden" id="launchModal">
-    <div class="modal-content">
-      <button class="close-btn" id="closeLaunchModal">&times;</button>
-      <h2 style="margin-bottom: 16px;">✨ Simulate Token Launch</h2>
-      <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 20px;">
-        This form only adds a token card to your local browser session. It does not deploy a contract, register an identity, preserve anonymity, or create a token.
-      </p>
-
-      <form id="createTokenForm">
-        <div class="form-group">
-          <label>Token Name:</label>
-          <input type="text" id="tokenNameInput" placeholder="e.g. TeleResistor" required>
-        </div>
-
-        <div class="form-group">
-          <label>Ticker Symbol:</label>
-          <input type="text" id="tokenSymbolInput" placeholder="e.g. TRES" required>
-        </div>
-
-        <div class="form-group">
-          <label>Description:</label>
-          <textarea id="tokenDescInput" rows="3" placeholder="Explain the memecoin lore..." required></textarea>
-        </div>
-
-        <div class="form-group">
-          <label>Emoji / Image Avatar:</label>
-          <input type="text" id="tokenEmojiInput" value="⚡" required>
-        </div>
-
-        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
-          🚀 Add simulated token
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Demo wallet selection modal -->
-  <div class="modal-overlay hidden" id="walletModal">
-    <div class="modal-content">
-      <button class="close-btn" id="closeWalletModal">&times;</button>
-      <h2 style="margin-bottom: 16px;">💎 Select Demo Wallet</h2>
-      <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 20px;">
-        This selection is cosmetic. It does not invoke TonConnect, access a wallet, request a signature, or submit a transaction.
-      </p>
-
-      <div class="wallet-option-list">
-        <div class="wallet-option-card" data-wallet="Tonkeeper">
-          <span>💎 Tonkeeper</span>
-          <span class="badge-tag">Popular</span>
-        </div>
-        <div class="wallet-option-card" data-wallet="MyTonWallet">
-          <span>⚡ MyTonWallet</span>
-          <span class="badge-tag">Fast</span>
-        </div>
-        <div class="wallet-option-card" data-wallet="OpenMask">
-          <span>🛡️ OpenMask</span>
-          <span class="badge-tag">Extension</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast Notification Container -->
-  <div class="toast-container" id="toastContainer"></div>
-
-  <script src="src/app.js" type="module"></script>
-</body>
+    <dialog id="readinessDialog"><form method="dialog"><button class="dialog-close" aria-label="Close">×</button><div class="eyebrow">TESTNET ENABLEMENT</div><h2 id="dialogTitle">Deployment manifest required</h2><p id="dialogText">The UI will remain read-only until a signed, reviewed testnet manifest declares the launchpad, verifier, gateway, indexer, code hashes, and TonConnect origin.</p><div class="checklist"><div><i>✓</i> No user-provided addresses</div><div><i>✓</i> No optimistic balance changes</div><div><i>✓</i> No automatic transaction submission</div></div><button class="button button-primary">Understood</button></form></dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="src/app.js"></script>
+  </body>
 </html>
