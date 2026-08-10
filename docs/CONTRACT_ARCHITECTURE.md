@@ -71,6 +71,8 @@ The adapter is a dedicated integration boundary with a pinned address and code
 hash. It accepts migration only from its configured launchpad and only with
 the immutable assets, pool parameters, and LP-recipient policy. Callback and
 bounce handling is part of the launchpad state machine, not a frontend task.
+Its fail-closed scaffold and enablement criteria are in the
+[DeDust adapter contract](DEDUST_ADAPTER_CONTRACT.md).
 
 ## Implementation order
 
