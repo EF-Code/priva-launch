@@ -399,6 +399,9 @@ fun claimRefund(sender: address, msg: PrivaRefundClaim) {
 }
 
 fun onInternalMessage(inMsg: InMessage) {
+    // Standard StateInit deployment and explicit operator top-ups have an
+    // empty body. They cannot change policy or accounting.
+    if (inMsg.body.isEmpty()) { return; }
     if (inMsg.body.remainingBitsCount() < 32) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
     if (inMsg.body.preloadUint(32) == PrivaTestnetBuyOpcode) {
         val msg = lazy PrivaTestnetBuy.fromSlice(inMsg.body);
