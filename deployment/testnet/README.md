@@ -11,6 +11,10 @@ and the file's SHA-256 digest in a real reviewed minter deployment record; the
 page itself is not deployment approval and must never be repurposed for
 mainnet without an independent review.
 
+The live document was verified byte-for-byte against commit `2c0e770` on
+2026-08-10. Its SHA-256 digest is
+`e0c4409d35ba05df5d9b6845a6ad02cc7bf851ca659fa2367834d5739ed9c381`.
+
 `reviewed-manifest.json` is deliberately absent. Add it only after all values
 are collected from a real testnet deployment and independently reviewed. It is
 safe to commit because TON addresses, code hashes, URLs, and public circuit
