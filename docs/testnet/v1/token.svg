@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Priva Testnet Token</title>
+  <desc id="desc">Purple testnet-only token mark</desc>
+  <rect width="256" height="256" rx="48" fill="#151126"/>
+  <path d="M56 69c0-14 11-25 25-25h67c29 0 52 23 52 52s-23 52-52 52H106v40c0 14-11 25-25 25s-25-11-25-25V69Zm50 29v4h42c4 0 7-3 7-7s-3-7-7-7h-42v10Z" fill="#a78bfa"/>
+  <path d="M177 179h-80" stroke="#44d7b6" stroke-width="12" stroke-linecap="round"/>
+</svg>

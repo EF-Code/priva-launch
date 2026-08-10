@@ -4,6 +4,13 @@ This directory is the only repository location for public, reviewed testnet
 deployment metadata. It must contain no seed phrase, private key, API token,
 Telegram bot token, or gateway issuer secret.
 
+The public, testnet-only TEP-64 metadata endpoint is
+`https://ef-code.github.io/priva-launch/testnet/v1/metadata.json`. Its source
+is in `docs/testnet/v1/metadata.json` for GitHub Pages. Pin both this HTTPS URL
+and the file's SHA-256 digest in a real reviewed minter deployment record; the
+page itself is not deployment approval and must never be repurposed for
+mainnet without an independent review.
+
 `reviewed-manifest.json` is deliberately absent. Add it only after all values
 are collected from a real testnet deployment and independently reviewed. It is
 safe to commit because TON addresses, code hashes, URLs, and public circuit

@@ -1,0 +1,7 @@
+{
+  "name": "Priva Testnet Launchpad Token",
+  "description": "Testnet-only lifecycle validation token for Priva. It has no value and is not a mainnet asset or an offer to sell tokens.",
+  "symbol": "PRIVA-T",
+  "decimals": 9,
+  "image": "https://ef-code.github.io/priva-launch/testnet/v1/token.svg"
+}
