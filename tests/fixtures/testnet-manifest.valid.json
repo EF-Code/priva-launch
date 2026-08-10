@@ -1,0 +1,12 @@
+{
+  "version": "testnet-1",
+  "network": "testnet",
+  "sourceRevision": "0123456789abcdef0123456789abcdef01234567",
+  "launchpadAddress": "EQTestnetLaunchpad",
+  "verifierAddress": "EQTestnetVerifier",
+  "gatewayUrl": "https://gateway.example.test",
+  "indexerUrl": "https://indexer.example.test",
+  "tonConnectManifestUrl": "https://app.example.test/tonconnect-manifest.json",
+  "codeHashes": { "launchpad": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+  "circuit": { "version": 1, "verificationKeyHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" }
+}

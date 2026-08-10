@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "node scripts/run-tests.cjs",
     "compile-contracts": "node scripts/compile-contracts.cjs",
-    "check:release": "node scripts/check-release-readiness.cjs"
+    "check:release": "node scripts/check-release-readiness.cjs",
+    "check:testnet-manifest": "node scripts/check-testnet-manifest.cjs"
   },
   "keywords": [
     "ton",
