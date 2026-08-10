@@ -41,6 +41,8 @@ The [governance and emergency control policy](docs/GOVERNANCE_AND_EMERGENCY_CONT
 limits future privileged actions to user-protective controls.
 The [operations and incident-response guide](docs/OPERATIONS_AND_INCIDENT_RESPONSE.md)
 defines the service and monitoring controls needed before any live deployment.
+The executable [release-readiness gate](docs/RELEASE_READINESS.md) is expected
+to block until reviewed deployment and assurance evidence is present.
 
 ## Repository structure
 
