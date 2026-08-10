@@ -90,28 +90,23 @@ The full configuration cell, code hashes, governance addresses, and deployment p
 
 ## 6. Pricing and settlement
 
-The protocol uses a monotonic linear bonding curve over sold supply, not the prototype's spot-price division.
+The production protocol may use a monotonic linear bonding curve only after its
+fixed-point parameters are independently reviewed. The current **testnet
+candidate** uses a fixed-price sale to remove curve rounding and overflow risk.
+It sells whole-token units only: 1,000,000,000 sale units at 85 nanoTON each,
+for an exact 85 TON target. Fractional jetton balances remain valid under
+TEP-74, but fractional sale units are not accepted in this candidate.
 
-Let `s` be raw token units sold, `P0` the initial price, and `K` the slope, all represented in integer fixed-point units. The cumulative cost is:
+For a buy with available value `v`, the contract computes `q` as the smaller
+of the remaining sale units and `floor(v / 85 nanoTON)`. It issues `q` whole
+tokens, accepts exactly `q * 85 nanoTON`, and returns the remainder as excess
+after the fixed documented gas reserve. No frontend quote is authoritative.
 
-```text
-C(s) = P0 * s + floor(K * s * s / 2)
-```
-
-For a buy with available value `v`, the contract computes the greatest integer `q` such that:
-
-```text
-C(s + q) - C(s) <= v
-```
-
-The contract defines one rounding direction for each operation and tests it at every boundary. It sends `q` tokens, accepts the exact cost, and returns the remaining value as excess minus a fixed, documented gas reserve. No frontend quote is authoritative.
-
-The deployment manifest fixes `P0` and `K` such that `C(S) = R` within the specified integer-rounding tolerance. It is invalid for pricing parameters to permit more than `R` accepted sale proceeds or more than `S` tokens issued.
-
-The repository's [`settlement` reference model](../src/protocol/settlement.cjs)
-uses `BigInt` and binary-searches the largest valid whole-token output. It is a
-test oracle for the contract implementation; it is not a substitute for the
-same checks in Tolk.
+The deployment is invalid if the candidate would issue more than one billion
+sale units or accept more than 85 TON. The repository's
+[`fixed-sale` reference model](../src/protocol/fixed-sale.cjs) uses `BigInt`
+and is a test oracle for the eventual Tolk implementation; it is not a
+substitute for the same checks in Tolk.
 
 There is no sell-back curve in version 1. A user can transfer jettons under TEP-74 but cannot redeem them against the launchpad. This avoids an unreviewed reserve-liability path. Post-graduation trading occurs only through the configured external pool.
 

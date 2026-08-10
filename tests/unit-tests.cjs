@@ -1,6 +1,7 @@
 const assert = require('assert');
 const { runSettlementTests } = require('./settlement.test.cjs');
 const { runVerifierBoundaryTests } = require('./verifier-boundary.test.cjs');
+const { runFixedSaleTests } = require('./fixed-sale.test.cjs');
 const { runDeploymentConfigTests } = require('./deployment-config.test.cjs');
 const { runGatewayClientTests } = require('./gateway-client.test.cjs');
 const { execFileSync } = require('child_process');
@@ -31,6 +32,7 @@ function runTests() {
 
   runSettlementTests();
   runVerifierBoundaryTests();
+  runFixedSaleTests();
   execFileSync('node', ['scripts/check-testnet-manifest.cjs', 'tests/fixtures/testnet-manifest.valid.json'], { cwd: path.join(__dirname, '..'), stdio: 'inherit' });
   return runDeploymentConfigTests().then(runGatewayClientTests);
 

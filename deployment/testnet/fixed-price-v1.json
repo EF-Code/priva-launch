@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "status": "testnet-candidate",
+  "sale": {
+    "tokenDecimals": 9,
+    "totalSupplyRaw": "1000000000000000000",
+    "saleUnitRaw": "1000000000",
+    "totalSaleUnits": "1000000000",
+    "priceNanoTonPerSaleUnit": "85",
+    "raiseTargetNanoTon": "85000000000",
+    "identityCapNanoTon": "4250000000",
+    "protocolFeeBps": 0,
+    "creatorAllocationRaw": "0"
+  },
+  "constraints": {
+    "fractionalSaleUnits": false,
+    "refundExcess": true,
+    "mainnetApproved": false
+  }
+}
