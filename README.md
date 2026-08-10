@@ -39,6 +39,8 @@ The [test strategy](docs/TEST_STRATEGY.md) records current coverage and the
 gates that must pass before mainnet value is accepted.
 The [governance and emergency control policy](docs/GOVERNANCE_AND_EMERGENCY_CONTROL.md)
 limits future privileged actions to user-protective controls.
+The [operations and incident-response guide](docs/OPERATIONS_AND_INCIDENT_RESPONSE.md)
+defines the service and monitoring controls needed before any live deployment.
 
 ## Repository structure
 
