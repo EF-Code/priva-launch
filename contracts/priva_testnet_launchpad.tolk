@@ -26,7 +26,9 @@ enum PrivaTestnetLaunchpadErrors {
     Unauthorized = 904,
     WrongOperation = 905,
     ExpiredAuthorization = 906,
-    WrongCircuitVersion = 907
+    WrongCircuitVersion = 907,
+    WrongRecipientAddress = 908,
+    WrongLaunchpadAddress = 909
 }
 
 /// Persistent layout for the eventual settled-buy path. It is intentionally
@@ -86,31 +88,48 @@ struct (0x50525642) PrivaTestnetBuy {
     publicInputs: cell
 }
 
-/// Decode the exact 15-element public-input envelope checked by the pinned
+/// Decode the exact 17-element public-input envelope checked by the pinned
 /// verifier core. Parsing the same canonical envelope avoids a policy check on
 /// a differently serialized set of values.
 fun parsePrivaPublicInputs(pubInputsCell: cell): array<int> {
     val (initialPayload, payloadIsExotic) = pubInputsCell.beginParseSpecial();
     if (payloadIsExotic || initialPayload.remainingBitsCount() < 8) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
     var payload = initialPayload;
-    if (payload.loadUint(8) != 15) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
+    if (payload.loadUint(8) != 17) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
     PrivaPurchaseAuthVerifier.checkPublicInputsPayloadShape(payload);
 
     var out: array<int> = [];
-    repeat (15) {
+    repeat (17) {
         out.push(PrivaPurchaseAuthVerifier.loadNextPubInput(mutate payload));
     }
     if (payload.remainingBitsCount() != 0 || payload.remainingRefsCount() != 0) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
     return out;
 }
 
-fun checkFixedBuySignals(inputs: array<int>) {
-    // Signal indexes are pinned by priva_purchase_auth/v1:
-    // authorized=2, operation=10, expiryEpoch=13, circuitVersion=14.
+fun checkAddressBinding(inputs: array<int>, recipient: address) {
+    // priva_purchase_auth/v2 exposes canonical basechain account IDs as
+    // high/low 128-bit limbs: launchpad=[9,10], recipient=[12,13].
+    val (launchpadWorkchain, launchpadAccountId) = contract.getAddress().getWorkchainAndHash();
+    val launchpadId = launchpadAccountId as int;
+    assert (launchpadWorkchain == 0) throw PrivaTestnetLaunchpadErrors.WrongLaunchpadAddress;
+    assert (inputs.get(9) == (launchpadId >> 128)) throw PrivaTestnetLaunchpadErrors.WrongLaunchpadAddress;
+    assert (inputs.get(10) == (launchpadId & ((1 << 128) - 1))) throw PrivaTestnetLaunchpadErrors.WrongLaunchpadAddress;
+
+    val (recipientWorkchain, recipientAccountId) = recipient.getWorkchainAndHash();
+    val recipientId = recipientAccountId as int;
+    assert (recipientWorkchain == 0) throw PrivaTestnetLaunchpadErrors.WrongRecipientAddress;
+    assert (inputs.get(12) == (recipientId >> 128)) throw PrivaTestnetLaunchpadErrors.WrongRecipientAddress;
+    assert (inputs.get(13) == (recipientId & ((1 << 128) - 1))) throw PrivaTestnetLaunchpadErrors.WrongRecipientAddress;
+}
+
+fun checkFixedBuySignals(inputs: array<int>, recipient: address) {
+    // Signal indexes are pinned by priva_purchase_auth/v2:
+    // authorized=2, operation=11, expiryEpoch=15, circuitVersion=16.
     assert (inputs.get(2) == 1) throw PrivaTestnetLaunchpadErrors.Unauthorized;
-    assert (inputs.get(10) == 1) throw PrivaTestnetLaunchpadErrors.WrongOperation;
-    assert (inputs.get(14) == 1) throw PrivaTestnetLaunchpadErrors.WrongCircuitVersion;
-    assert (inputs.get(13) >= blockchain.now()) throw PrivaTestnetLaunchpadErrors.ExpiredAuthorization;
+    assert (inputs.get(11) == 1) throw PrivaTestnetLaunchpadErrors.WrongOperation;
+    assert (inputs.get(16) == 1) throw PrivaTestnetLaunchpadErrors.WrongCircuitVersion;
+    assert (inputs.get(15) >= blockchain.now()) throw PrivaTestnetLaunchpadErrors.ExpiredAuthorization;
+    checkAddressBinding(inputs, recipient);
 }
 
 /// Build the exact TEP-74 internal_transfer cell consumed by the pinned
@@ -173,7 +192,7 @@ fun onInternalMessage(inMsg: InMessage) {
                 pubInputs: msg.publicInputs,
             };
             assert (PrivaPurchaseAuthVerifier.create().verifyProof(verifierMessage)) throw PrivaTestnetLaunchpadErrors.WrongProof;
-            checkFixedBuySignals(parsePrivaPublicInputs(msg.publicInputs));
+            checkFixedBuySignals(parsePrivaPublicInputs(msg.publicInputs), msg.recipient);
             throw PrivaTestnetLaunchpadErrors.PolicyAndStateNotImplemented;
         }
         else => {

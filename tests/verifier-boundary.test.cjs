@@ -13,16 +13,18 @@ function runVerifierBoundaryTests() {
     'utf8',
   );
 
-  assert.match(boundary, /PrivaPurchaseAuthPublicInputCount: int = 15/);
+  assert.match(boundary, /PrivaPurchaseAuthPublicInputCount: int = 17/);
   assert.match(boundary, /PrivaPurchaseAuthBuyOperation: int = 1/);
   assert.match(boundary, /IdentityNullifier = 0/);
-  assert.match(boundary, /CircuitVersion = 14/);
+  assert.match(boundary, /LaunchpadAddressHi = 9/);
+  assert.match(boundary, /RecipientAddressLo = 13/);
+  assert.match(boundary, /CircuitVersion = 16/);
   assert.match(boundary, /DisabledUntilInlinedAuditedVerifier = 850/);
   assert.match(boundary, /throw PrivaPurchaseAuthVerifierBoundaryErrors\.DisabledUntilInlinedAuditedVerifier/);
   assert.doesNotMatch(boundary, /send\s*\(/);
   assert.doesNotMatch(boundary, /verifyProof\s*\(/);
-  assert.match(docs, /3bb53a289f34bd2a3274fd8dccf0ec9d48da155b13c6c696f0f4f349f49bf1f3/);
-  assert.match(docs, /\| 14 \| `circuitVersion`/);
+  assert.match(docs, /7454d4f4663b455dd2753dec56acabce5bb662a89a50dc22d22d6c07ad5121e4/);
+  assert.match(docs, /\| 16 \| `circuitVersion`/);
   console.log('✅ Verifier boundary ABI and fail-closed guards');
 }
 

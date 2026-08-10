@@ -11,8 +11,8 @@ artifact set for `priva_purchase_auth`:
 | Item | Value |
 | --- | --- |
 | Circuit version | `1` |
-| Public inputs | `15` |
-| Verifying-key SHA-256 | `3bb53a289f34bd2a3274fd8dccf0ec9d48da155b13c6c696f0f4f349f49bf1f3` |
+| Public inputs | `17` |
+| Verifying-key SHA-256 | `7454d4f4663b455dd2753dec56acabce5bb662a89a50dc22d22d6c07ad5121e4` |
 | Generated verifier source | `../zk-tele-auth/contracts/priva_purchase_auth_verifier.tolk` |
 
 The verification key and proving key are development artifacts, not a completed
@@ -36,12 +36,14 @@ order, scalar encoding, or value that differs from this table.
 | 6 | `isPremiumRequired` | equals immutable launch policy |
 | 7 | `issuerKeyHash` | equals immutable gateway issuer commitment |
 | 8 | `launchIdHash` | equals this launch's immutable identifier |
-| 9 | `launchpadAddressHash` | equals this contract and workchain commitment |
-| 10 | `operation` | equals `BUY` (`1`) |
-| 11 | `recipientHash` | equals the requested jetton recipient commitment |
-| 12 | `clientNonce` | bound into the action nullifier only |
-| 13 | `expiryEpoch` | not expired under the immutable clock policy |
-| 14 | `circuitVersion` | equals `1` |
+| 9 | `launchpadAddressHi` | high 128 bits of this basechain contract account ID |
+| 10 | `launchpadAddressLo` | low 128 bits of this basechain contract account ID |
+| 11 | `operation` | equals `BUY` (`1`) |
+| 12 | `recipientAddressHi` | high 128 bits of the exact basechain jetton recipient account ID |
+| 13 | `recipientAddressLo` | low 128 bits of the exact basechain jetton recipient account ID |
+| 14 | `clientNonce` | bound into the action nullifier only |
+| 15 | `expiryEpoch` | not expired under the immutable clock policy |
+| 16 | `circuitVersion` | equals `1` |
 
 The supplied TON amount, quote, and token output are intentionally absent:
 they remain contract-calculated values and must not be trusted from a proof or

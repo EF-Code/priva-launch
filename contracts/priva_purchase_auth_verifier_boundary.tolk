@@ -12,7 +12,7 @@
 // gateway response, or a successful call to another contract as authorization.
 
 const PrivaPurchaseAuthCircuitVersion: int = 1;
-const PrivaPurchaseAuthPublicInputCount: int = 15;
+const PrivaPurchaseAuthPublicInputCount: int = 17;
 const PrivaPurchaseAuthBuyOperation: int = 1;
 
 enum PrivaPurchaseAuthPublicInputIndex {
@@ -25,12 +25,14 @@ enum PrivaPurchaseAuthPublicInputIndex {
     IsPremiumRequired = 6,
     IssuerKeyHash = 7,
     LaunchIdHash = 8,
-    LaunchpadAddressHash = 9,
-    Operation = 10,
-    RecipientHash = 11,
-    ClientNonce = 12,
-    ExpiryEpoch = 13,
-    CircuitVersion = 14
+    LaunchpadAddressHi = 9,
+    LaunchpadAddressLo = 10,
+    Operation = 11,
+    RecipientAddressHi = 12,
+    RecipientAddressLo = 13,
+    ClientNonce = 14,
+    ExpiryEpoch = 15,
+    CircuitVersion = 16
 }
 
 enum PrivaPurchaseAuthVerifierBoundaryErrors {

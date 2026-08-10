@@ -61,11 +61,11 @@ published order:
 | Input | Required binding |
 | --- | --- |
 | `identityNullifier` | `Poseidon(userId, privaPlatformDomainHash, issuerSecret)`; stable for one Telegram user on Priva, never random. |
-| `actionNullifier` | `Poseidon(identityNullifier, launchIdHash, operation, recipientHash, clientNonce)`; consumed once by the launchpad. |
+| `actionNullifier` | `Poseidon(identityNullifier, launchIdHash, operation, Poseidon(recipientAddressHi, recipientAddressLo), clientNonce)`; consumed once by the launchpad. |
 | `launchIdHash` | Immutable launch configuration identifier. |
-| `launchpadAddressHash` | Exact deployed launchpad and workchain. |
+| `launchpadAddressHi`, `launchpadAddressLo` | Canonical high/low 128-bit limbs of the exact deployed basechain launchpad account ID. |
 | `operation` | Fixed operation code, initially `BUY`. |
-| `recipientHash` | Exact jetton recipient wallet address. |
+| `recipientAddressHi`, `recipientAddressLo` | Canonical high/low 128-bit limbs of the exact basechain jetton recipient account ID. |
 | `expiryEpoch` | Short, verifier-pinned authorization expiry. |
 | `issuerKeyHash` | Poseidon commitment to the gateway’s stable issuer secret. |
 | `circuitVersion` | Pinned circuit/verifier version. |
