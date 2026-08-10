@@ -19,5 +19,8 @@ src = "contracts/priva_dedust_adapter.tolk"
 [contracts.priva_launchpad]
 src = "contracts/priva_launchpad.tolk"
 
+[contracts.priva_testnet_launchpad]
+src = "contracts/priva_testnet_launchpad.tolk"
+
 [contracts.priva_purchase_auth_verifier_boundary]
 src = "contracts/priva_purchase_auth_verifier_boundary.tolk"
