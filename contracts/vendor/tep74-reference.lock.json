@@ -2,6 +2,7 @@
   "name": "TON token-contract reference",
   "repository": "https://github.com/ton-blockchain/token-contract",
   "revision": "1182ad99413242f09925d50e70ccb7e0e09f94d4",
+  "vendorPath": "vendor/ton-token-contract",
   "standard": "TEP-74",
   "status": "reference-only",
   "notes": "Do not copy or deploy this source until its selected master/wallet variant, licensing, initialization parameters, and independent review are recorded in the reviewed testnet manifest."
