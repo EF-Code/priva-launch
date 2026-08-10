@@ -31,7 +31,25 @@ struct PrivaTestnetLaunchpadStorage {
     acceptedNanoTon: coins
     usedActionNullifiers: dict
     identityPurchaseTotals: dict
+    pendingMints: dict
+    userRefunds: dict
 }
+
+/// Record serialized under the buy query ID before a TEP-74 mint request.
+/// The explicit `state` prevents a callback/bounce from being applied twice.
+struct PrivaPendingMint {
+    sender: address
+    recipient: address
+    identityNullifier: uint256
+    actionNullifier: uint256
+    rawJettonAmount: coins
+    acceptedNanoTon: coins
+    excessNanoTon: coins
+    state: uint8
+}
+
+const PendingMintState: uint8 = 1;
+const RefundPendingState: uint8 = 2;
 
 fun PrivaTestnetLaunchpadStorage.load(): PrivaTestnetLaunchpadStorage {
     val data = contract.getData();
@@ -42,6 +60,8 @@ fun PrivaTestnetLaunchpadStorage.load(): PrivaTestnetLaunchpadStorage {
             acceptedNanoTon: 0,
             usedActionNullifiers: createEmptyDict(),
             identityPurchaseTotals: createEmptyDict(),
+            pendingMints: createEmptyDict(),
+            userRefunds: createEmptyDict(),
         };
     }
     return PrivaTestnetLaunchpadStorage.fromCell(data);
