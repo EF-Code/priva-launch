@@ -1,4 +1,5 @@
 import "@zk_tele_auth/priva_purchase_auth_verifier"
+import "@stdlib/exotic-cells"
 
 // Typed, testnet-candidate launchpad ABI.
 //
@@ -13,7 +14,11 @@ const PrivaTestnetBuyOpcode: int = 0x50525642; // "PRVB"
 enum PrivaTestnetLaunchpadErrors {
     PolicyAndStateNotImplemented = 901,
     MalformedMessage = 902,
-    WrongProof = 903
+    WrongProof = 903,
+    Unauthorized = 904,
+    WrongOperation = 905,
+    ExpiredAuthorization = 906,
+    WrongCircuitVersion = 907
 }
 
 struct (0x50525642) PrivaTestnetBuy {
@@ -22,6 +27,33 @@ struct (0x50525642) PrivaTestnetBuy {
     recipient: address
     proof: cell
     publicInputs: cell
+}
+
+/// Decode the exact 15-element public-input envelope checked by the pinned
+/// verifier core. Parsing the same canonical envelope avoids a policy check on
+/// a differently serialized set of values.
+fun parsePrivaPublicInputs(pubInputsCell: cell): array<int> {
+    val (initialPayload, payloadIsExotic) = pubInputsCell.beginParseSpecial();
+    if (payloadIsExotic || initialPayload.remainingBitsCount() < 8) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
+    var payload = initialPayload;
+    if (payload.loadUint(8) != 15) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
+    PrivaPurchaseAuthVerifier.checkPublicInputsPayloadShape(payload);
+
+    var out: array<int> = [];
+    repeat (15) {
+        out.push(PrivaPurchaseAuthVerifier.loadNextPubInput(mutate payload));
+    }
+    if (payload.remainingBitsCount() != 0 || payload.remainingRefsCount() != 0) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
+    return out;
+}
+
+fun checkFixedBuySignals(inputs: array<int>) {
+    // Signal indexes are pinned by priva_purchase_auth/v1:
+    // authorized=2, operation=10, expiryEpoch=13, circuitVersion=14.
+    assert (inputs.get(2) == 1) throw PrivaTestnetLaunchpadErrors.Unauthorized;
+    assert (inputs.get(10) == 1) throw PrivaTestnetLaunchpadErrors.WrongOperation;
+    assert (inputs.get(14) == 1) throw PrivaTestnetLaunchpadErrors.WrongCircuitVersion;
+    assert (inputs.get(13) >= blockchain.now()) throw PrivaTestnetLaunchpadErrors.ExpiredAuthorization;
 }
 
 fun onInternalMessage(inMsg: InMessage) {
@@ -38,6 +70,7 @@ fun onInternalMessage(inMsg: InMessage) {
                 pubInputs: msg.publicInputs,
             };
             assert (PrivaPurchaseAuthVerifier.create().verifyProof(verifierMessage)) throw PrivaTestnetLaunchpadErrors.WrongProof;
+            checkFixedBuySignals(parsePrivaPublicInputs(msg.publicInputs));
             throw PrivaTestnetLaunchpadErrors.PolicyAndStateNotImplemented;
         }
         else => {
