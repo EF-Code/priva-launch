@@ -28,20 +28,50 @@ enum PrivaTestnetLaunchpadErrors {
     ExpiredAuthorization = 906,
     WrongCircuitVersion = 907,
     WrongRecipientAddress = 908,
-    WrongLaunchpadAddress = 909
+    WrongLaunchpadAddress = 909,
+    UnconfiguredLaunchPolicy = 910,
+    WrongAppDomain = 911,
+    WrongIssuer = 912,
+    WrongLaunch = 913,
+    WrongCredentialPolicy = 914,
+    FutureAuthorization = 915,
+    AuthorizationTtlExceeded = 916
+}
+
+/// Immutable proof policy serialized in StateInit. No message can configure or
+/// rotate this policy: the contract address itself commits to these values.
+struct PrivaTestnetLaunchpadPolicy {
+    appDomainHash: uint256
+    issuerKeyHash: uint256
+    launchIdHash: uint256
+    maxTokenAgeSec: uint32
+    maxClockSkewSec: uint32
+    maxAuthorizationTtlSec: uint32
+    requirePremium: bool
 }
 
 /// Persistent layout for the eventual settled-buy path. It is intentionally
 /// separate from the currently closed handler: state must only be saved in the
 /// same transaction that either mints the exact quoted amount or records a
 /// recoverable pending operation/refund.
-struct PrivaTestnetLaunchpadStorage {
+struct PrivaTestnetLaunchpadSettlementStorage {
+    pendingMints: dict
+    userRefunds: dict
+}
+
+struct PrivaTestnetLaunchpadAccountingStorage {
     soldSaleUnits: uint64
     acceptedNanoTon: coins
     usedActionNullifiers: dict
     identityPurchaseTotals: dict
-    pendingMints: dict
-    userRefunds: dict
+    settlement: Cell<PrivaTestnetLaunchpadSettlementStorage>
+}
+
+struct PrivaTestnetLaunchpadStorage {
+    // Two typed refs keep the accounting root beneath both TON's 1023-bit and
+    // four-reference cell limits as dictionaries become populated.
+    policy: Cell<PrivaTestnetLaunchpadPolicy>
+    accounting: Cell<PrivaTestnetLaunchpadAccountingStorage>
 }
 
 /// Record serialized under the buy query ID before a TEP-74 mint request.
@@ -65,12 +95,25 @@ fun PrivaTestnetLaunchpadStorage.load(): PrivaTestnetLaunchpadStorage {
     val payload = data.beginParse();
     if (payload.remainingBitsCount() == 0 && payload.remainingRefsCount() == 0) {
         return PrivaTestnetLaunchpadStorage {
-            soldSaleUnits: 0,
-            acceptedNanoTon: 0,
-            usedActionNullifiers: createEmptyDict(),
-            identityPurchaseTotals: createEmptyDict(),
-            pendingMints: createEmptyDict(),
-            userRefunds: createEmptyDict(),
+            policy: PrivaTestnetLaunchpadPolicy {
+                appDomainHash: 0,
+                issuerKeyHash: 0,
+                launchIdHash: 0,
+                maxTokenAgeSec: 0,
+                maxClockSkewSec: 0,
+                maxAuthorizationTtlSec: 0,
+                requirePremium: false,
+            }.toCell(),
+            accounting: PrivaTestnetLaunchpadAccountingStorage {
+                soldSaleUnits: 0,
+                acceptedNanoTon: 0,
+                usedActionNullifiers: createEmptyDict(),
+                identityPurchaseTotals: createEmptyDict(),
+                settlement: PrivaTestnetLaunchpadSettlementStorage {
+                    pendingMints: createEmptyDict(),
+                    userRefunds: createEmptyDict(),
+                }.toCell(),
+            }.toCell(),
         };
     }
     return PrivaTestnetLaunchpadStorage.fromCell(data);
@@ -122,7 +165,7 @@ fun checkAddressBinding(inputs: array<int>, recipient: address) {
     assert (inputs.get(13) == (recipientId & ((1 << 128) - 1))) throw PrivaTestnetLaunchpadErrors.WrongRecipientAddress;
 }
 
-fun checkFixedBuySignals(inputs: array<int>, recipient: address) {
+fun checkFixedBuySignals(inputs: array<int>, recipient: address, policy: PrivaTestnetLaunchpadPolicy) {
     // Signal indexes are pinned by priva_purchase_auth/v2:
     // authorized=2, operation=11, expiryEpoch=15, circuitVersion=16.
     assert (inputs.get(2) == 1) throw PrivaTestnetLaunchpadErrors.Unauthorized;
@@ -130,6 +173,19 @@ fun checkFixedBuySignals(inputs: array<int>, recipient: address) {
     assert (inputs.get(16) == 1) throw PrivaTestnetLaunchpadErrors.WrongCircuitVersion;
     assert (inputs.get(15) >= blockchain.now()) throw PrivaTestnetLaunchpadErrors.ExpiredAuthorization;
     checkAddressBinding(inputs, recipient);
+
+    // The zero/default policy is never valid. This makes an undeclared
+    // StateInit fail closed rather than letting a first caller define policy.
+    assert (policy.appDomainHash != 0 && policy.issuerKeyHash != 0 && policy.launchIdHash != 0) throw PrivaTestnetLaunchpadErrors.UnconfiguredLaunchPolicy;
+    assert (policy.maxTokenAgeSec > 0 && policy.maxAuthorizationTtlSec > 0) throw PrivaTestnetLaunchpadErrors.UnconfiguredLaunchPolicy;
+    assert (inputs.get(3) == (policy.appDomainHash as int)) throw PrivaTestnetLaunchpadErrors.WrongAppDomain;
+    assert (inputs.get(7) == (policy.issuerKeyHash as int)) throw PrivaTestnetLaunchpadErrors.WrongIssuer;
+    assert (inputs.get(8) == (policy.launchIdHash as int)) throw PrivaTestnetLaunchpadErrors.WrongLaunch;
+    assert (inputs.get(5) == (policy.maxTokenAgeSec as int)) throw PrivaTestnetLaunchpadErrors.WrongCredentialPolicy;
+    assert (inputs.get(6) == (policy.requirePremium ? 1 : 0)) throw PrivaTestnetLaunchpadErrors.WrongCredentialPolicy;
+    assert (inputs.get(4) <= blockchain.now()) throw PrivaTestnetLaunchpadErrors.FutureAuthorization;
+    assert (blockchain.now() - inputs.get(4) <= (policy.maxClockSkewSec as int)) throw PrivaTestnetLaunchpadErrors.FutureAuthorization;
+    assert (inputs.get(15) - inputs.get(4) <= (policy.maxAuthorizationTtlSec as int)) throw PrivaTestnetLaunchpadErrors.AuthorizationTtlExceeded;
 }
 
 /// Build the exact TEP-74 internal_transfer cell consumed by the pinned
@@ -192,7 +248,8 @@ fun onInternalMessage(inMsg: InMessage) {
                 pubInputs: msg.publicInputs,
             };
             assert (PrivaPurchaseAuthVerifier.create().verifyProof(verifierMessage)) throw PrivaTestnetLaunchpadErrors.WrongProof;
-            checkFixedBuySignals(parsePrivaPublicInputs(msg.publicInputs), msg.recipient);
+            val storage = PrivaTestnetLaunchpadStorage.load();
+            checkFixedBuySignals(parsePrivaPublicInputs(msg.publicInputs), msg.recipient, storage.policy.load());
             throw PrivaTestnetLaunchpadErrors.PolicyAndStateNotImplemented;
         }
         else => {
