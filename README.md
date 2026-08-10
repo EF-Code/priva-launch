@@ -33,6 +33,8 @@ it is not connected in the current demo.
 The [wallet and chain integration gate](docs/WALLET_AND_CHAIN_INTEGRATION.md)
 lists the reviewed deployment artifacts required before the demo can connect a
 real wallet.
+The [gateway and indexer service contract](docs/GATEWAY_AND_INDEXER_SERVICE.md)
+defines the privacy and confirmation boundaries for the future web app.
 
 ## Repository structure
 
