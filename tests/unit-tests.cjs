@@ -1,4 +1,5 @@
 const assert = require('assert');
+const { runSettlementTests } = require('./settlement.test.cjs');
 
 // CommonJS test module imports
 const { BondingCurveEngine } = require('../src/bonding-curve-cjs.cjs');
@@ -22,6 +23,8 @@ function runTests() {
   const tokens = BondingCurveEngine.calculateBuyOutput(5, 0);
   assert(tokens > 0);
   console.log('✅ Test 3 Passed: Token Buy Output Calculator');
+
+  runSettlementTests();
 
   console.log('\n🎉 All PrivaLaunch Unit Tests Passed Successfully!');
 }

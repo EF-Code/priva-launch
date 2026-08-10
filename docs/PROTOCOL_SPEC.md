@@ -105,6 +105,11 @@ The contract defines one rounding direction for each operation and tests it at e
 
 The deployment manifest fixes `P0` and `K` such that `C(S) = R` within the specified integer-rounding tolerance. It is invalid for pricing parameters to permit more than `R` accepted sale proceeds or more than `S` tokens issued.
 
+The repository's [`settlement` reference model](../src/protocol/settlement.cjs)
+uses `BigInt` and binary-searches the largest valid whole-token output. It is a
+test oracle for the contract implementation; it is not a substitute for the
+same checks in Tolk.
+
 There is no sell-back curve in version 1. A user can transfer jettons under TEP-74 but cannot redeem them against the launchpad. This avoids an unreviewed reserve-liability path. Post-graduation trading occurs only through the configured external pool.
 
 ## 7. Identity proof and allocation rules
