@@ -9,6 +9,7 @@ contracts = "contracts"
 gen = "gen"
 tests = "tests"
 wrappers = "wrappers"
+zk_tele_auth = "vendor/zk-tele-auth/contracts"
 
 [contracts.priva_factory]
 src = "contracts/priva_factory.tolk"

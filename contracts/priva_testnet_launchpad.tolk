@@ -1,3 +1,5 @@
+import "@zk_tele_auth/priva_purchase_auth_verifier"
+
 // Typed, testnet-candidate launchpad ABI.
 //
 // This is deliberately not registered as an active value-handling contract.
@@ -9,8 +11,9 @@ const PrivaTestnetLaunchpadVersion: int = 1;
 const PrivaTestnetBuyOpcode: int = 0x50525642; // "PRVB"
 
 enum PrivaTestnetLaunchpadErrors {
-    VerifierNotInlined = 901,
-    MalformedMessage = 902
+    PolicyAndStateNotImplemented = 901,
+    MalformedMessage = 902,
+    WrongProof = 903
 }
 
 struct (0x50525642) PrivaTestnetBuy {
@@ -27,13 +30,19 @@ fun onInternalMessage(inMsg: InMessage) {
         PrivaTestnetBuy => {
             val messageTail = msg.forceLoadLazyObject();
             if (!messageTail.isEmpty()) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
-            // Do not accept, account for, or forward value until this exact
-            // message invokes the reviewed inlined verifier synchronously.
-            throw PrivaTestnetLaunchpadErrors.VerifierNotInlined;
+            // This is an in-process call to the pinned verifier core. The
+            // state-machine gate remains closed until it checks every bound
+            // public signal and persists nullifier/accounting state.
+            val verifierMessage = PrivaPurchaseAuthVerifierVerify {
+                proof: msg.proof,
+                pubInputs: msg.publicInputs,
+            };
+            assert (PrivaPurchaseAuthVerifier.create().verifyProof(verifierMessage)) throw PrivaTestnetLaunchpadErrors.WrongProof;
+            throw PrivaTestnetLaunchpadErrors.PolicyAndStateNotImplemented;
         }
         else => {
             assert (inMsg.body.isEmpty()) throw PrivaTestnetLaunchpadErrors.MalformedMessage;
-            throw PrivaTestnetLaunchpadErrors.VerifierNotInlined;
+            throw PrivaTestnetLaunchpadErrors.PolicyAndStateNotImplemented;
         }
     }
 }
