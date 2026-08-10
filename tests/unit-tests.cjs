@@ -1,6 +1,8 @@
 const assert = require('assert');
 const { runSettlementTests } = require('./settlement.test.cjs');
 const { runVerifierBoundaryTests } = require('./verifier-boundary.test.cjs');
+const { runDeploymentConfigTests } = require('./deployment-config.test.cjs');
+const { runGatewayClientTests } = require('./gateway-client.test.cjs');
 
 // CommonJS test module imports
 const { BondingCurveEngine } = require('../src/bonding-curve-cjs.cjs');
@@ -27,8 +29,9 @@ function runTests() {
 
   runSettlementTests();
   runVerifierBoundaryTests();
+  return runDeploymentConfigTests().then(runGatewayClientTests);
 
   console.log('\n🎉 All PrivaLaunch Unit Tests Passed Successfully!');
 }
 
-runTests();
+runTests().catch((error) => { console.error(error); process.exitCode = 1; });
