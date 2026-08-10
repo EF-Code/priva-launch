@@ -30,6 +30,9 @@ factory, per-launch, jetton, verifier, and DeDust boundaries.
 The [zk-tele-auth integration contract](docs/ZK_TELE_AUTH_INTEGRATION.md)
 describes the gateway-attested private-identity flow this web app will present;
 it is not connected in the current demo.
+The [wallet and chain integration gate](docs/WALLET_AND_CHAIN_INTEGRATION.md)
+lists the reviewed deployment artifacts required before the demo can connect a
+real wallet.
 
 ## Repository structure
 
