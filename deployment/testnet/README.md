@@ -17,8 +17,9 @@ Before creating that manifest, the team must provide:
 3. a TLS gateway and indexer controlled by the testnet operator;
 4. a public TonConnect manifest URL bound to the testnet UI origin; and
 5. the circuit verification-key hash used by the deployed verifier.
+6. the DeDust native vault, jetton vault, and pool addresses plus their code
+   hashes, pinned to the reviewed DeDust SDK/source revision.
 
 Validate a supplied manifest with `npm run check:testnet-manifest --
 deployment/testnet/reviewed-manifest.json`. The command checks shape and public
 integrity only; it does not certify an address, operator, or audit.
-

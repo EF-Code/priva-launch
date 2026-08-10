@@ -3,7 +3,7 @@
   "title": "Priva reviewed testnet deployment manifest",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "network", "sourceRevision", "launchpadAddress", "verifierAddress", "gatewayUrl", "indexerUrl", "tonConnectManifestUrl", "codeHashes", "circuit"],
+  "required": ["version", "network", "sourceRevision", "launchpadAddress", "verifierAddress", "gatewayUrl", "indexerUrl", "tonConnectManifestUrl", "codeHashes", "circuit", "dex"],
   "properties": {
     "version": { "type": "string", "minLength": 1 },
     "network": { "const": "testnet" },
@@ -14,6 +14,7 @@
     "indexerUrl": { "type": "string", "pattern": "^https://" },
     "tonConnectManifestUrl": { "type": "string", "pattern": "^https://" },
     "codeHashes": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{64}$" } },
-    "circuit": { "type": "object", "additionalProperties": false, "required": ["version", "verificationKeyHash"], "properties": { "version": { "const": 1 }, "verificationKeyHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" } } }
+    "circuit": { "type": "object", "additionalProperties": false, "required": ["version", "verificationKeyHash"], "properties": { "version": { "const": 1 }, "verificationKeyHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" } } },
+    "dex": { "type": "object", "additionalProperties": false, "required": ["kind", "sourceRevision", "nativeVaultAddress", "jettonVaultAddress", "poolAddress", "codeHashes"], "properties": { "kind": { "const": "dedust-v2" }, "sourceRevision": { "type": "string", "pattern": "^[a-f0-9]{40}$" }, "nativeVaultAddress": { "type": "string", "minLength": 1 }, "jettonVaultAddress": { "type": "string", "minLength": 1 }, "poolAddress": { "type": "string", "minLength": 1 }, "codeHashes": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{64}$" } } } }
   }
 }

@@ -31,6 +31,10 @@ export function parseTestnetManifest(manifest) {
   if (!manifest.codeHashes || typeof manifest.codeHashes !== 'object' || Array.isArray(manifest.codeHashes) || Object.keys(manifest.codeHashes).length === 0) throw new Error('Deployment manifest must pin non-empty codeHashes.');
   for (const [name, digest] of Object.entries(manifest.codeHashes)) if (!sha256.test(digest)) throw new Error(`Invalid SHA-256 code hash for ${name}.`);
   if (!manifest.circuit || manifest.circuit.version !== 1 || !sha256.test(manifest.circuit.verificationKeyHash || '')) throw new Error('Deployment manifest must pin the version-1 verification key hash.');
+  if (!manifest.dex || manifest.dex.kind !== 'dedust-v2' || !/^[a-f0-9]{40}$/.test(manifest.dex.sourceRevision || '')) throw new Error('Deployment manifest must pin the reviewed DeDust v2 source revision.');
+  for (const field of ['nativeVaultAddress', 'jettonVaultAddress', 'poolAddress']) if (typeof manifest.dex[field] !== 'string' || manifest.dex[field].trim() === '') throw new Error(`Deployment manifest DEX is missing ${field}.`);
+  if (!manifest.dex.codeHashes || typeof manifest.dex.codeHashes !== 'object' || Object.keys(manifest.dex.codeHashes).length === 0) throw new Error('Deployment manifest DEX must pin code hashes.');
+  for (const [name, digest] of Object.entries(manifest.dex.codeHashes)) if (!sha256.test(digest)) throw new Error(`Invalid DEX SHA-256 code hash for ${name}.`);
   return Object.freeze({ mode: 'testnet', ...manifest });
 }
 

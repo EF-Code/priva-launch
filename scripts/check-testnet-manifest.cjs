@@ -19,5 +19,9 @@ for (const field of ['gatewayUrl', 'indexerUrl', 'tonConnectManifestUrl']) if (!
 if (!manifest.codeHashes || typeof manifest.codeHashes !== 'object' || Object.keys(manifest.codeHashes).length === 0) throw new Error('codeHashes must be non-empty.');
 for (const [name, value] of Object.entries(manifest.codeHashes)) if (!sha256.test(value)) throw new Error(`Invalid code hash for ${name}.`);
 if (!manifest.circuit || manifest.circuit.version !== 1 || !sha256.test(manifest.circuit.verificationKeyHash || '')) throw new Error('Circuit must pin v1 verificationKeyHash.');
+if (!manifest.dex || manifest.dex.kind !== 'dedust-v2' || !revision.test(manifest.dex.sourceRevision || '')) throw new Error('DEX must pin DeDust v2 and its source revision.');
+for (const field of ['nativeVaultAddress', 'jettonVaultAddress', 'poolAddress']) if (typeof manifest.dex[field] !== 'string' || manifest.dex[field].trim() === '') throw new Error(`DEX is missing ${field}.`);
+if (!manifest.dex.codeHashes || typeof manifest.dex.codeHashes !== 'object' || Object.keys(manifest.dex.codeHashes).length === 0) throw new Error('DEX codeHashes must be non-empty.');
+for (const [name, value] of Object.entries(manifest.dex.codeHashes)) if (!sha256.test(value)) throw new Error(`Invalid DEX code hash for ${name}.`);
 const digest = crypto.createHash('sha256').update(fs.readFileSync(manifestPath)).digest('hex');
 console.log(`✓ Testnet manifest is structurally valid (${digest})`);
