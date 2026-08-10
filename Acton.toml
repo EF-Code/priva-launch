@@ -3,6 +3,13 @@ name = "priva"
 version = "1.0.0"
 description = "Priva protocol-boundary scaffolds in Tolk; not deployable"
 
+[import-mappings]
+acton = ".acton"
+contracts = "contracts"
+gen = "gen"
+tests = "tests"
+wrappers = "wrappers"
+
 [contracts.priva_factory]
 src = "contracts/priva_factory.tolk"
 
