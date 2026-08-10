@@ -9,6 +9,10 @@ const file = path.resolve(root, candidate);
 if (!file.startsWith(`${root}${path.sep}`)) throw new Error('Initialization manifest path must stay within the repository.');
 const manifest = JSON.parse(fs.readFileSync(file, 'utf8'));
 if (manifest.network !== 'testnet' || manifest.status !== 'reviewed') throw new Error('Only a reviewed testnet initialization manifest may be compiled.');
+const buildArtifact = JSON.parse(fs.readFileSync(path.join(root, 'build', 'priva_testnet_launchpad.json'), 'utf8'));
+const codeCellHash = String(buildArtifact.hash || '').toLowerCase();
+if (!/^[a-f0-9]{64}$/.test(codeCellHash)) throw new Error('Acton build artifact has no valid launchpad code-cell hash. Run acton build first.');
+if (manifest.launchpadCodeSha256 !== codeCellHash) throw new Error('Manifest launchpadCodeSha256 does not match the current Acton build artifact.');
 
 const u = (value, bits, name) => {
   if (typeof value !== 'string' || !/^(0|[1-9][0-9]*)$/.test(value)) throw new Error(`${name} must be a canonical decimal string.`);
@@ -49,6 +53,7 @@ const accounting = beginCell()
 const data = beginCell().storeRef(policyCell).storeRef(accounting).endCell();
 const result = {
   schemaVersion: 1,
+  launchpadCodeCellHash: codeCellHash,
   initialDataCellHash: data.hash().toString('hex'),
   initialDataBocBase64: data.toBoc().toString('base64'),
   policyCellHash: policyCell.hash().toString('hex'),

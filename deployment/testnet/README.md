@@ -33,5 +33,6 @@ placeholder URLs.
 
 `npm run compile:testnet-init -- deployment/testnet/reviewed-init.json` emits
 the exact initial-data cell hash and BOC. The manifest must contain that hash;
-the compiler rejects a mismatch. Pair it with the independently compiled
-launchpad code hash before calculating or funding any contract address.
+the compiler rejects a mismatch and also compares its launchpad code hash to
+the current Acton build artifact. Pair those two hashes before calculating or
+funding any contract address.
