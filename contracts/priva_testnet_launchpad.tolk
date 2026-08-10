@@ -12,6 +12,13 @@ import "@stdlib/tvm-dicts"
 const PrivaTestnetLaunchpadVersion: int = 1;
 const PrivaTestnetBuyOpcode: int = 0x50525642; // "PRVB"
 
+// TEP-74 values pinned to vendor/ton-token-contract at the revision recorded
+// in contracts/vendor/tep74-reference.lock.json. Keep these builders separate
+// from the state transition until the minter, funding amount, and bounce path
+// are part of the immutable launch configuration.
+const Tep74MintOpcode: int = 21;
+const Tep74InternalTransferOpcode: int = 0x178d4519;
+
 enum PrivaTestnetLaunchpadErrors {
     PolicyAndStateNotImplemented = 901,
     MalformedMessage = 902,
@@ -104,6 +111,52 @@ fun checkFixedBuySignals(inputs: array<int>) {
     assert (inputs.get(10) == 1) throw PrivaTestnetLaunchpadErrors.WrongOperation;
     assert (inputs.get(14) == 1) throw PrivaTestnetLaunchpadErrors.WrongCircuitVersion;
     assert (inputs.get(13) >= blockchain.now()) throw PrivaTestnetLaunchpadErrors.ExpiredAuthorization;
+}
+
+/// Build the exact TEP-74 internal_transfer cell consumed by the pinned
+/// reference minter. The forward payload is inline and empty (`Either Cell`
+/// selector = 0), matching the reference wrapper's mintMessage() encoding.
+fun buildTep74InternalTransfer(
+    queryId: uint64,
+    rawJettonAmount: coins,
+    from: address,
+    responseAddress: address,
+): cell {
+    return beginCell()
+        .storeUint(Tep74InternalTransferOpcode, 32)
+        .storeUint(queryId, 64)
+        .storeCoins(rawJettonAmount)
+        .storeAddress(from)
+        .storeAddress(responseAddress)
+        .storeCoins(0)
+        .storeBool(false)
+        .endCell();
+}
+
+/// Build the privileged `mint#21` body accepted by the selected TEP-74
+/// reference minter. `walletFundingNanoTon` is distinct from the buyer's
+/// accepted price: it funds deploy/delivery of the recipient's jetton wallet.
+/// This helper does not create or send an outgoing message.
+fun buildTep74MintBody(
+    queryId: uint64,
+    recipient: address,
+    walletFundingNanoTon: coins,
+    rawJettonAmount: coins,
+    launchpadAddress: address,
+): cell {
+    val internalTransfer = buildTep74InternalTransfer(
+        queryId,
+        rawJettonAmount,
+        launchpadAddress,
+        launchpadAddress,
+    );
+    return beginCell()
+        .storeUint(Tep74MintOpcode, 32)
+        .storeUint(queryId, 64)
+        .storeAddress(recipient)
+        .storeCoins(walletFundingNanoTon)
+        .storeRef(internalTransfer)
+        .endCell();
 }
 
 fun onInternalMessage(inMsg: InMessage) {
