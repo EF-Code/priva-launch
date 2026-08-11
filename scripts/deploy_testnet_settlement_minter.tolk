@@ -25,6 +25,7 @@ fun main(
     expectedCodeHash: uint256,
     expectedDataHash: uint256,
     deployValue: coins,
+    expectedAdminAddress: address,
 ) {
     if (expectedAddress.getWorkchain() != PRIVA_TESTNET_WORKCHAIN) {
         Assert.fail("Only basechain (workchain 0) testnet deployments are supported.");
@@ -32,6 +33,15 @@ fun main(
     if (deployValue < PRIVA_MIN_DEPLOY_VALUE) {
         Assert.fail("deployValue must be at least 0.2 TON to leave room for minter deployment gas.");
     }
+
+    // The initial minter admin is serialized in the reviewed data cell. A
+    // broadcast is only safe when the wallet approving it is that exact
+    // address; otherwise the deployed minter would be permanently controlled
+    // by an unintended key until the hand-off message is accepted.
+    var dataSlice = data.beginParse();
+    dataSlice.loadCoins();
+    val configuredAdmin = dataSlice.loadAddress();
+    Assert.equal(configuredAdmin, expectedAdminAddress, "minter data admin differs from the reviewed admin address");
 
     // This path loads the compiler output, never source-selected or
     // user-supplied code. The checked-in lock and compile step bind it to the
@@ -63,6 +73,9 @@ fun main(
         Assert.fail("Broadcasts require --tonconnect; configured mnemonic wallets are disabled by this script.");
     }
     val deployer = scripts.wallet(walletName);
+    if (net.isBroadcasting()) {
+        Assert.equal(deployer.address, expectedAdminAddress, "TonConnect wallet must equal the minter's reviewed initial admin");
+    }
 
     println("network={}", net.isBroadcasting() ? "testnet-broadcast" : "emulation");
     println("deployer={}", deployer.address);

@@ -107,10 +107,12 @@ npm run compile:settlement-minter
 acton script scripts/deploy_testnet_settlement_minter.tolk \
   <MINTER_DATA_CELL_BOC_HEX> <EXPECTED_MINTER_ADDRESS> \
   0x<EXPECTED_MINTER_CODE_HASH> 0x<EXPECTED_MINTER_DATA_CELL_HASH> \
-  <DEPLOY_VALUE_NANOTONS>
+  <DEPLOY_VALUE_NANOTONS> <EXPECTED_INITIAL_ADMIN_ADDRESS>
 ```
 
 Only the release authority may repeat it with `PRIVA_DEPLOY_NETWORK=testnet
---net testnet --tonconnect` after the signed release gate passes. The deployer
-must record the resulting address, transaction hash, and post-deploy code/data
-hashes in the real reviewed manifests.
+--net testnet --tonconnect` after the owner-attested release gate passes. The
+script checks that the selected TonConnect wallet is the exact initial minter
+admin before it sends anything. The deployer must record the resulting
+address, transaction hash, and post-deploy code/data hashes in the real
+reviewed manifests.
