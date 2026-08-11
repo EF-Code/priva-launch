@@ -90,7 +90,7 @@ npm run test:local-services
 The gateway refuses to start without `PRIVA_GATEWAY_MODE=local`, binds only to
 loopback, and never prints the Telegram bot token or issuer secret. The indexer
 returns no launches until a real upstream is configured. The Pages workflow
-builds the app, TonConnect manifest, PNG icon, and public token metadata, but
+builds the app, TonConnect manifest, SVG icon, and public token metadata, but
 does not inject a reviewed deployment manifest or enable wallet actions.
 
 The default build intentionally has no deployment manifest. `npm test` runs the JavaScript boundaries and manifest fixtures; `npm run test:contracts`, `npm run test:real-verifier`, and `npm run test:real-lifecycle` cover the candidate contracts and emulator paths. These checks do not create a live address, replace an independent audit, or authorize a wallet broadcast.
