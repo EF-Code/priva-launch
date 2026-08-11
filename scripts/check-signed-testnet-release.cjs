@@ -133,6 +133,9 @@ const envelope = readJson(envelopePath, 'Signed release envelope');
 if (envelope.schemaVersion !== 1) fail('Signed release envelope schemaVersion must be 1.');
 if (envelope.network !== 'testnet') fail('Signed release envelope network must be testnet.');
 if (envelope.status !== 'reviewed') fail('Signed release envelope status must be reviewed.');
+if (envelope.approvalMode !== undefined && !['solo-owner-attested', 'independent-gpg'].includes(envelope.approvalMode)) {
+  fail('approvalMode must be solo-owner-attested or independent-gpg.');
+}
 requireRevision('sourceRevision', envelope.sourceRevision);
 
 const payloadPath = resolveRepoPath(envelope.payloadPath, 'payloadPath');
@@ -165,66 +168,88 @@ for (const [label, manifest] of [['Initialization manifest', initManifest], ['Ru
 assertNoPlaceholders('Initialization manifest', initPath);
 assertNoPlaceholders('Runtime manifest', runtimePath);
 
-if (!Array.isArray(envelope.approvals) || envelope.approvals.length < 2) {
-  fail('At least two signed independent approvals are required.');
-}
-
-const reviewers = new Set();
-const roles = new Set();
-const temporaryHomes = [];
-try {
-  for (const [index, approval] of envelope.approvals.entries()) {
-    const label = `Approval ${index + 1}`;
-    if (!approval || typeof approval !== 'object') fail(`${label} must be an object.`);
-    for (const field of ['reviewer', 'role', 'reviewedCommit', 'decision', 'evidenceUrl', 'publicKeyFingerprint', 'reviewedAt']) {
-      if (typeof approval[field] !== 'string' || approval[field].trim() === '') fail(`${label} is missing ${field}.`);
-    }
-    if (reviewers.has(approval.reviewer)) fail(`Duplicate reviewer identity: ${approval.reviewer}.`);
-    if (roles.has(approval.role)) fail(`Approval roles must be independent; duplicate role: ${approval.role}.`);
-    reviewers.add(approval.reviewer);
-    roles.add(approval.role);
-    if (approval.reviewedCommit !== envelope.sourceRevision) fail(`${label} reviewedCommit does not match sourceRevision.`);
-    if (approval.decision !== 'approved-for-testnet-only') fail(`${label} must be approved-for-testnet-only.`);
-    if (!httpsUrl.test(approval.evidenceUrl) || bannedPlaceholder.test(approval.evidenceUrl)) fail(`${label} evidenceUrl must be a real HTTPS URL.`);
-    if (Number.isNaN(Date.parse(approval.reviewedAt))) fail(`${label} reviewedAt must be ISO-8601.`);
-    if (approval.manifestPayloadSha256 !== envelope.payloadSha256) fail(`${label} manifestPayloadSha256 does not match payloadSha256.`);
-    requireSha(`${label}.reportSha256`, approval.reportSha256);
-
-    const reportPath = resolveRepoPath(approval.reportPath, `${label}.reportPath`);
-    const reportSignaturePath = resolveRepoPath(approval.reportSignaturePath, `${label}.reportSignaturePath`);
-    const payloadSignaturePath = resolveRepoPath(approval.payloadSignaturePath, `${label}.payloadSignaturePath`);
-    const publicKeyPath = resolveRepoPath(approval.publicKeyPath, `${label}.publicKeyPath`);
-    if (digest(reportPath) !== approval.reportSha256) fail(`${label} reportSha256 does not match the report file.`);
-
-    const fingerprints = parseKeyFingerprints(publicKeyPath);
-    if (fingerprints.length === 0) fail(`${label} public key has no fingerprint.`);
-    const declaredFingerprint = approval.publicKeyFingerprint.replace(/\s+/g, '').toUpperCase();
-    if (!fingerprints.includes(declaredFingerprint)) fail(`${label} declared fingerprint does not match its public key.`);
-
-    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'priva-release-gpg-'));
-    temporaryHomes.push(home);
-    verifyDetachedSignature({
-      home,
-      keyPath: publicKeyPath,
-      signaturePath: reportSignaturePath,
-      signedPath: reportPath,
-      label: `${label} report`,
-      allowedFingerprints: fingerprints,
-    });
-    verifyDetachedSignature({
-      home,
-      keyPath: publicKeyPath,
-      signaturePath: payloadSignaturePath,
-      signedPath: payloadPath,
-      label: `${label} payload`,
-      allowedFingerprints: fingerprints,
-    });
+if (envelope.approvalMode === 'solo-owner-attested') {
+  if (envelope.approvals !== undefined) {
+    fail('Solo-owner-attested releases must not include independent approval entries.');
   }
-} catch (error) {
-  if (error.code === 'ENOENT' || error.code === 'EACCES') fail(`gpg is required for signed approval verification: ${error.message}`);
-  throw error;
-} finally {
-  for (const home of temporaryHomes) fs.rmSync(home, { recursive: true, force: true });
-}
+  const attestation = envelope.ownerAttestation;
+  if (!attestation || typeof attestation !== 'object' || Array.isArray(attestation)) {
+    fail('Solo-owner-attested release is missing ownerAttestation.');
+  }
+  for (const field of ['owner', 'role', 'reviewedCommit', 'decision', 'reviewedAt', 'manifestPayloadSha256', 'initManifestSha256', 'runtimeManifestSha256', 'statement']) {
+    if (typeof attestation[field] !== 'string' || attestation[field].trim() === '') fail(`ownerAttestation is missing ${field}.`);
+  }
+  if (attestation.role !== 'release-owner') fail('ownerAttestation role must be release-owner.');
+  if (attestation.reviewedCommit !== envelope.sourceRevision) fail('ownerAttestation reviewedCommit does not match sourceRevision.');
+  if (attestation.decision !== 'approved-for-testnet-only') fail('ownerAttestation must be approved-for-testnet-only.');
+  if (Number.isNaN(Date.parse(attestation.reviewedAt))) fail('ownerAttestation reviewedAt must be ISO-8601.');
+  if (attestation.manifestPayloadSha256 !== envelope.payloadSha256) fail('ownerAttestation manifestPayloadSha256 does not match payloadSha256.');
+  if (attestation.initManifestSha256 !== envelope.initManifestSha256) fail('ownerAttestation initManifestSha256 does not match the envelope.');
+  if (attestation.runtimeManifestSha256 !== envelope.runtimeManifestSha256) fail('ownerAttestation runtimeManifestSha256 does not match the envelope.');
+  if (bannedPlaceholder.test(attestation.owner) || bannedPlaceholder.test(attestation.statement)) fail('ownerAttestation contains a placeholder or fixture marker.');
+  console.log(`✓ Solo-owner-attested reviewed testnet release verified (${envelope.sourceRevision})`);
+} else {
+  if (!Array.isArray(envelope.approvals) || envelope.approvals.length < 2) {
+    fail('At least two signed independent approvals are required unless approvalMode is solo-owner-attested.');
+  }
 
-console.log(`✓ Signed reviewed testnet release verified (${envelope.sourceRevision})`);
+  const reviewers = new Set();
+  const roles = new Set();
+  const temporaryHomes = [];
+  try {
+    for (const [index, approval] of envelope.approvals.entries()) {
+      const label = `Approval ${index + 1}`;
+      if (!approval || typeof approval !== 'object') fail(`${label} must be an object.`);
+      for (const field of ['reviewer', 'role', 'reviewedCommit', 'decision', 'evidenceUrl', 'publicKeyFingerprint', 'reviewedAt']) {
+        if (typeof approval[field] !== 'string' || approval[field].trim() === '') fail(`${label} is missing ${field}.`);
+      }
+      if (reviewers.has(approval.reviewer)) fail(`Duplicate reviewer identity: ${approval.reviewer}.`);
+      if (roles.has(approval.role)) fail(`Approval roles must be independent; duplicate role: ${approval.role}.`);
+      reviewers.add(approval.reviewer);
+      roles.add(approval.role);
+      if (approval.reviewedCommit !== envelope.sourceRevision) fail(`${label} reviewedCommit does not match sourceRevision.`);
+      if (approval.decision !== 'approved-for-testnet-only') fail(`${label} must be approved-for-testnet-only.`);
+      if (!httpsUrl.test(approval.evidenceUrl) || bannedPlaceholder.test(approval.evidenceUrl)) fail(`${label} evidenceUrl must be a real HTTPS URL.`);
+      if (Number.isNaN(Date.parse(approval.reviewedAt))) fail(`${label} reviewedAt must be ISO-8601.`);
+      if (approval.manifestPayloadSha256 !== envelope.payloadSha256) fail(`${label} manifestPayloadSha256 does not match payloadSha256.`);
+      requireSha(`${label}.reportSha256`, approval.reportSha256);
+
+      const reportPath = resolveRepoPath(approval.reportPath, `${label}.reportPath`);
+      const reportSignaturePath = resolveRepoPath(approval.reportSignaturePath, `${label}.reportSignaturePath`);
+      const payloadSignaturePath = resolveRepoPath(approval.payloadSignaturePath, `${label}.payloadSignaturePath`);
+      const publicKeyPath = resolveRepoPath(approval.publicKeyPath, `${label}.publicKeyPath`);
+      if (digest(reportPath) !== approval.reportSha256) fail(`${label} reportSha256 does not match the report file.`);
+
+      const fingerprints = parseKeyFingerprints(publicKeyPath);
+      if (fingerprints.length === 0) fail(`${label} public key has no fingerprint.`);
+      const declaredFingerprint = approval.publicKeyFingerprint.replace(/\s+/g, '').toUpperCase();
+      if (!fingerprints.includes(declaredFingerprint)) fail(`${label} declared fingerprint does not match its public key.`);
+
+      const home = fs.mkdtempSync(path.join(os.tmpdir(), 'priva-release-gpg-'));
+      temporaryHomes.push(home);
+      verifyDetachedSignature({
+        home,
+        keyPath: publicKeyPath,
+        signaturePath: reportSignaturePath,
+        signedPath: reportPath,
+        label: `${label} report`,
+        allowedFingerprints: fingerprints,
+      });
+      verifyDetachedSignature({
+        home,
+        keyPath: publicKeyPath,
+        signaturePath: payloadSignaturePath,
+        signedPath: payloadPath,
+        label: `${label} payload`,
+        allowedFingerprints: fingerprints,
+      });
+    }
+  } catch (error) {
+    if (error.code === 'ENOENT' || error.code === 'EACCES') fail(`gpg is required for signed approval verification: ${error.message}`);
+    throw error;
+  } finally {
+    for (const home of temporaryHomes) fs.rmSync(home, { recursive: true, force: true });
+  }
+
+  console.log(`✓ Signed reviewed testnet release verified (${envelope.sourceRevision})`);
+}

@@ -4,8 +4,8 @@
  * This test deliberately uses the checked-in Acton launchpad build, the
  * checked-in settlement-minter candidate/wallet artifacts, and a real Groth16 proof. It
  * is a diagnostic gate, not deployment authorization: live deployment still
- * requires an independent review of the fork, code hash, gas reserve, and
- * reviewed initialization manifest.
+ * requires the owner-attested initialization/release manifests, exact code
+ * and data hashes, and real testnet funding/transaction evidence.
  */
 
 import assert from 'node:assert/strict';
@@ -469,7 +469,7 @@ async function main() {
   assert.equal(minterArtifact.callback.responseMustEqualAdmin, true);
   assert.equal(minterArtifact.callback.upgradeDisabled, true);
   console.log(`SETTLEMENT MINTER CANDIDATE: ${minterArtifact.codeCellHash}`);
-  console.log('DEPLOYMENT GATE: independent fork review, live testnet initialization evidence, and signed release approvals remain required');
+  console.log('DEPLOYMENT GATE: owner-attested release metadata, live testnet initialization evidence, and exact post-deploy hashes remain required');
   console.log(`Evidence candidate launchpad: ${success.launchpad.address}`);
 }
 

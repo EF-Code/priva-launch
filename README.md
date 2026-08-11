@@ -6,7 +6,7 @@
 
 This repository is an early product and contract prototype. It is **not a live TON launchpad**. The shipped build has no reviewed deployment manifest, so it stays in demo/read-only mode and cannot connect a wallet or submit a transaction. When a real reviewed testnet manifest is injected, the UI can lazily open TonConnect and construct one canonical testnet purchase request; it still does not turn unreviewed contracts, gateway responses, or browser state into authorization.
 
-Do not send TON to an address represented by this project. There are no live addresses, signed release approvals, or chain transaction traces in this repository. Demo mode contains simulated launch cards for product exploration only; testnet mode renders no fixtures when its reviewed indexer is unavailable.
+Do not send TON to an address represented by this project. There are no live addresses or chain transaction traces in this repository. Demo mode contains simulated launch cards for product exploration only; testnet mode renders no fixtures when its reviewed indexer is unavailable. A solo-owner testnet attestation, when eventually added, is self-attestation rather than an independent audit.
 
 ## What is here today
 

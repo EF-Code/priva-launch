@@ -9,10 +9,15 @@
   "settlementMinterCallbackOpcode": "0x50525646",
   "initialDataCellHash": "aab6bfb90c4c839b7c91d08dbe7159fff481215a7d69879186f5784f0053c0b0",
   "circuit": { "version": 1, "verificationKeySha256": "7454d4f4663b455dd2753dec56acabce5bb662a89a50dc22d22d6c07ad5121e4" },
-  "review": { "approvals": [
-    { "reviewer": "independent-contract-reviewer", "evidenceUrl": "https://example.invalid/reviews/contract" },
-    { "reviewer": "independent-zk-reviewer", "evidenceUrl": "https://example.invalid/reviews/zk" }
-  ] },
+  "review": {
+    "mode": "solo-owner-attested",
+    "owner": "ef-code",
+    "role": "release-owner",
+    "sourceRevision": "798ec80f2d000000000000000000000000000000",
+    "decision": "approved-for-testnet-only",
+    "attestedAt": "2026-08-11T00:00:00Z",
+    "statement": "I reviewed this exact testnet initialization record and its pinned artifact hashes for testnet-only use."
+  },
   "policy": {
     "appDomainHash": "1",
     "issuerKeyHash": "2",

@@ -16,9 +16,9 @@ The live document was verified byte-for-byte against commit `2c0e770` on
 `e0c4409d35ba05df5d9b6845a6ad02cc7bf851ca659fa2367834d5739ed9c381`.
 
 `reviewed-manifest.json` is deliberately absent. Add it only after all values
-are collected from a real testnet deployment and independently reviewed. It is
-safe to commit because TON addresses, code hashes, URLs, and public circuit
-commitments are not credentials.
+are collected from a real testnet deployment and checked by the project owner.
+It is safe to commit because TON addresses, code hashes, URLs, and public
+circuit commitments are not credentials.
 
 Before creating that manifest, the team must provide:
 
@@ -44,9 +44,10 @@ Before any StateInit is built, validate its separate reviewed initialization
 record with `npm run check:testnet-init -- deployment/testnet/reviewed-init.json`.
 It pins the address-binding proof ABI, immutable verifier policy, settlement
 minter and wallet-library code hashes, the pinned upstream minter revision and
-`PRIVA_MINT_FAILURE` opcode, jetton sale terms, launchpad code hash, and two
-public review evidence URLs. The fixture is only a structural example; never
-deploy it or replace independent review with placeholder URLs.
+`PRIVA_MINT_FAILURE` opcode, jetton sale terms, launchpad code hash, and the
+owner's exact-commit testnet-only attestation. A solo owner attestation is
+allowed for this testnet package; it is not an independent audit and must not
+be replaced with placeholder URLs.
 
 `npm run compile:testnet-init -- deployment/testnet/reviewed-init.json` emits
 the exact initial-data cell hash and BOC. The manifest must contain that hash;
@@ -56,12 +57,13 @@ funding any contract address.
 
 After both real manifests exist, generate the canonical release payload and
 run `npm run check:testnet-signatures --
-deployment/testnet/reviewed-release.json`. That gate verifies the two manifest
-digests, two distinct reviewer identities and roles, detached OpenPGP report
-and payload signatures, public-key fingerprints, source-revision binding, and
-placeholder rejection. It still cannot prove reviewer independence or the
-authenticity of a chain trace; those require release-authority review of the
-published evidence.
+deployment/testnet/reviewed-release.json`. For this solo project, that gate
+verifies the two manifest digests, the owner attestation's exact source and
+payload binding, and placeholder rejection without requiring reports or
+cryptographic signatures. An optional independent-review envelope continues to
+verify distinct reviewer identities, detached OpenPGP signatures, and public
+key fingerprints. Neither mode proves the authenticity of a chain trace;
+that still requires release-authority inspection of published evidence.
 
 ## Controlled testnet deployment
 
@@ -84,7 +86,7 @@ acton script scripts/deploy_testnet_launchpad.tolk \
   0x<EXPECTED_LAUNCHPAD_CODE_HASH> 0x<EXPECTED_DATA_CELL_HASH> <DEPLOY_VALUE_NANOTONS>
 ```
 
-Only after `reviewed-init.json`, `reviewed-manifest.json`, and the signed
+Only after `reviewed-init.json`, `reviewed-manifest.json`, and the owner-attested
 release gate pass may the release authority run the same command with:
 
 ```bash
