@@ -2,7 +2,7 @@
  * Real-proof controlled-testnet lifecycle evidence.
  *
  * This test deliberately uses the checked-in Acton launchpad build, the
- * reviewed settlement-minter/wallet artifacts, and a real Groth16 proof. It
+ * checked-in settlement-minter candidate/wallet artifacts, and a real Groth16 proof. It
  * is a diagnostic gate, not deployment authorization: live deployment still
  * requires an independent review of the fork, code hash, gas reserve, and
  * reviewed initialization manifest.
