@@ -11,7 +11,7 @@ function runTestnetLifecycleBoundaryTests() {
   assert.match(source, /BounceMode\.RichBounce/);
   assert.match(source, /fun onBouncedMessage/);
   assert.match(source, /fun claimRefund/);
-  assert.match(source, /msg\.maxValue >= terms\.mintMessageValueNanoTon/);
+  assert.match(source, /msg\.maxValue >= settlementTerms\.mintMessageValueNanoTon/);
   assert.match(source, /policy: Cell<PrivaTestnetLaunchpadPolicy>/);
   assert.doesNotMatch(source, /ConfigureLaunchpad|setPolicy|changeAdmin/);
   console.log('✅ Testnet lifecycle source guards passed');

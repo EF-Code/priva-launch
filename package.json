@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node scripts/run-tests.cjs",
+    "test:real-lifecycle": "ZK_TELE_AUTH_ARTIFACTS_DIR=vendor/zk-tele-auth/artifacts node tests/priva-purchase-lifecycle.test.mjs",
     "test:contracts": "acton test tests/acton --reporter console",
     "compile-contracts": "node scripts/compile-contracts.cjs",
     "check:release": "node scripts/check-release-readiness.cjs",
