@@ -18,7 +18,9 @@
     "check:testnet-init": "node scripts/check-testnet-init-manifest.cjs",
     "check:testnet-signatures": "node scripts/check-signed-testnet-release.cjs",
     "create:testnet-payload": "node scripts/create-testnet-release-payload.cjs",
-    "compile:testnet-init": "node scripts/compile-testnet-init.cjs"
+    "compile:testnet-init": "node scripts/compile-testnet-init.cjs",
+    "deploy:testnet-launchpad": "acton script scripts/deploy_testnet_launchpad.tolk",
+    "deploy:testnet-minter": "acton script scripts/deploy_testnet_settlement_minter.tolk"
   },
   "keywords": [
     "ton",

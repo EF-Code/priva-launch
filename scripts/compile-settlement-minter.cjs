@@ -11,6 +11,7 @@ const { Cell } = require('@ton/core');
 const sourcePath = path.join(root, 'contracts', 'priva_settlement_minter.fc');
 const upstreamDir = path.join(root, 'vendor', 'ton-token-contract', 'contracts');
 const outputPath = path.join(root, 'build', 'priva_settlement_minter.json');
+const codeBocPath = path.join(root, 'build', 'priva_settlement_minter.boc');
 const lockPath = path.join(root, 'contracts', 'vendor', 'settlement-minter.lock.json');
 
 function sha256(value) {
@@ -70,9 +71,11 @@ async function main() {
 
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, `${JSON.stringify(artifact, null, 2)}\n`);
+  fs.writeFileSync(codeBocPath, Buffer.from(result.codeBoc, 'base64'));
   console.log(`compiled ${artifact.contract}`);
   console.log(`codeCellHash=${artifact.codeCellHash}`);
   console.log(`artifact=${path.relative(root, outputPath)}`);
+  console.log(`codeBoc=${path.relative(root, codeBocPath)}`);
 }
 
 main().catch((error) => {

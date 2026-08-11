@@ -31,6 +31,11 @@ Before creating that manifest, the team must provide:
 6. the DeDust native vault, jetton vault, and pool addresses plus their code
    hashes, pinned to the reviewed DeDust SDK/source revision.
 
+The runtime manifest must set `status` to `reviewed`, pin the exact 40-character
+source revision, and use canonical friendly TON addresses (`EQ`, `UQ`, `kQ`, or
+`0Q`) for every launchpad, verifier, and DeDust account. The UI rejects an
+otherwise-shaped object before it can open TonConnect.
+
 Validate a supplied manifest with `npm run check:testnet-manifest --
 deployment/testnet/reviewed-manifest.json`. The command checks shape and public
 integrity only; it does not certify an address, operator, or audit.
@@ -60,18 +65,23 @@ published evidence.
 
 ## Controlled testnet deployment
 
-The repository now includes `scripts/deploy_testnet_launchpad.tolk`. It takes
-the exact reviewed launchpad data cell and its pinned code/data hashes, derives
-the StateInit address, refuses an address or artifact mismatch, refuses an
-already deployed account, and prints the observed transaction hash. It runs in
-the emulator by default and cannot broadcast from a configured mnemonic wallet.
+The repository now includes `scripts/deploy_testnet_launchpad.tolk` and
+`scripts/deploy_testnet_settlement_minter.tolk`. The launchpad script takes the
+exact reviewed launchpad data cell and its pinned code/data hashes, derives the
+StateInit address, refuses an address or artifact mismatch, refuses an already
+deployed account, and prints the observed transaction hash. The minter script
+uses the exact `build/priva_settlement_minter.boc` emitted by
+`npm run compile:settlement-minter`, applies the same address/hash/network/
+TonConnect checks, and never invents minter metadata or admin state. Both run
+in the emulator by default and refuse configured mnemonic wallets for
+broadcasts.
 
 Run the deterministic preflight first:
 
 ```bash
 acton script scripts/deploy_testnet_launchpad.tolk \
   <DATA_CELL_BOC_HEX> <EXPECTED_BASECHAIN_ADDRESS> \
-  <EXPECTED_LAUNCHPAD_CODE_HASH> <EXPECTED_DATA_CELL_HASH> <DEPLOY_VALUE_NANOTONS>
+  0x<EXPECTED_LAUNCHPAD_CODE_HASH> 0x<EXPECTED_DATA_CELL_HASH> <DEPLOY_VALUE_NANOTONS>
 ```
 
 Only after `reviewed-init.json`, `reviewed-manifest.json`, and the signed
@@ -87,3 +97,18 @@ The connected wallet will show and approve the transaction; the resulting
 address and transaction hash must then be recorded in the real manifest/evidence
 package. No live address, transaction hash, or reviewer signature is created by
 the emulator run.
+
+Run the minter preflight with the same reviewed data cell and expected values:
+
+```bash
+npm run compile:settlement-minter
+acton script scripts/deploy_testnet_settlement_minter.tolk \
+  <MINTER_DATA_CELL_BOC_HEX> <EXPECTED_MINTER_ADDRESS> \
+  0x<EXPECTED_MINTER_CODE_HASH> 0x<EXPECTED_MINTER_DATA_CELL_HASH> \
+  <DEPLOY_VALUE_NANOTONS>
+```
+
+Only the release authority may repeat it with `PRIVA_DEPLOY_NETWORK=testnet
+--net testnet --tonconnect` after the signed release gate passes. The deployer
+must record the resulting address, transaction hash, and post-deploy code/data
+hashes in the real reviewed manifests.
