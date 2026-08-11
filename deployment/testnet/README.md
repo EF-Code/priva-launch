@@ -48,3 +48,12 @@ the exact initial-data cell hash and BOC. The manifest must contain that hash;
 the compiler rejects a mismatch and also compares its launchpad code hash to
 the current Acton build artifact. Pair those two hashes before calculating or
 funding any contract address.
+
+After both real manifests exist, generate the canonical release payload and
+run `npm run check:testnet-signatures --
+deployment/testnet/reviewed-release.json`. That gate verifies the two manifest
+digests, two distinct reviewer identities and roles, detached OpenPGP report
+and payload signatures, public-key fingerprints, source-revision binding, and
+placeholder rejection. It still cannot prove reviewer independence or the
+authenticity of a chain trace; those require release-authority review of the
+published evidence.
