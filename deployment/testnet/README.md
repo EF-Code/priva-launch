@@ -116,3 +116,24 @@ script checks that the selected TonConnect wallet is the exact initial minter
 admin before it sends anything. The deployer must record the resulting
 address, transaction hash, and post-deploy code/data hashes in the real
 reviewed manifests.
+
+After both contracts are deployed, complete the minter's two-stage admin
+handoff with `scripts/handoff_testnet_settlement_minter.tolk`. It first sends
+`change_admin` from the reviewed initial-admin wallet, verifies
+`get_next_admin_address`, then asks the exact launchpad to emit `claim_admin`
+and verifies that the nomination is cleared. The script refuses mnemonic
+wallets for broadcasts and requires the same testnet TonConnect path:
+
+```bash
+PRIVA_DEPLOY_NETWORK=testnet \
+  npm run handoff:testnet-minter -- \
+  --net testnet --tonconnect --explorer tonscan \
+  <MINTER_ADDRESS> <LAUNCHPAD_ADDRESS> <INITIAL_ADMIN_ADDRESS> \
+  <CHANGE_QUERY_ID> <CLAIM_QUERY_ID> \
+  <CHANGE_VALUE_NANOTONS> <CLAIM_VALUE_NANOTONS>
+```
+
+Use two distinct non-zero query IDs and exact reviewed values. Run it without
+`--net` first, inspect the printed addresses and values, and approve each
+TonConnect request only when the wallet shows the expected testnet
+destination. Do not hand-encode these opcodes in a wallet application.
