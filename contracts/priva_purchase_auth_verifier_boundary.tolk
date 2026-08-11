@@ -1,15 +1,23 @@
 // Priva purchase-authorization verifier integration boundary.
 //
 // The Groth16 implementation is generated in the sibling zk-tele-auth
-// repository as `contracts/priva_purchase_auth_verifier.tolk`. It has a
-// standalone `onInternalMessage` entrypoint, so importing it into a launchpad
-// would either fail composition or tempt an unsafe asynchronous callback
-// design. TON internal calls cannot synchronously return proof validity.
+// repository as `contracts/priva_purchase_auth_verifier.tolk`. This contract
+// is a stateless, testnet-only proof-checking candidate that composes that
+// generated core and checks a complete proof envelope synchronously.
 //
-// This contract therefore records the exact ABI that a future *inlined*,
-// independently reviewed verifier must implement. It is deliberately not a
-// verifier and rejects all messages. No launchpad may treat this boundary, a
-// gateway response, or a successful call to another contract as authorization.
+// It is *not* a purchase authorizer. It does not bind a proof to a launchpad,
+// recipient, sale terms, gateway policy, nullifier, or state transition. The
+// real launchpad must import the pure verifier core directly and perform all of
+// those checks before mutating state. A separately deployed verifier must never
+// be used as an asynchronous authorization callback.
+
+import "@zk_tele_auth/priva_purchase_auth_verifier"
+
+contract PrivaPurchaseAuthVerifierBoundary {
+    description: "Testnet-only stateless Groth16 proof-checking candidate; not a purchase authorizer"
+    storage: PrivaPurchaseAuthVerifierStorage
+    incomingMessages: PrivaPurchaseAuthVerifierVerify
+}
 
 const PrivaPurchaseAuthCircuitVersion: int = 1;
 const PrivaPurchaseAuthPublicInputCount: int = 17;
@@ -35,15 +43,28 @@ enum PrivaPurchaseAuthPublicInputIndex {
     CircuitVersion = 16
 }
 
-enum PrivaPurchaseAuthVerifierBoundaryErrors {
-    DisabledUntilInlinedAuditedVerifier = 850
-}
+// This handler only answers the cryptographic question "is this proof
+// envelope valid under the generated v1 verification key?" It deliberately
+// has no persistent writes and no privileged sender check. Any caller that
+// needs authorization must perform the launchpad-local policy and replay
+// checks itself, before accepting value or consuming a nullifier.
+fun onInternalMessage(inMsg: InMessage) {
+    val msg = lazy PrivaPurchaseAuthVerifierVerify.fromSlice(inMsg.body);
 
-// Deliberately rejects proof envelopes. The eventual launchpad must invoke an
-// inlined pure verifier before changing nullifier or sale state; it must not
-// forward this message to a separately deployed verifier contract.
-fun onInternalMessage(_msgValue: int, _inMsgBody: slice) {
-    throw PrivaPurchaseAuthVerifierBoundaryErrors.DisabledUntilInlinedAuditedVerifier;
+    match (msg) {
+        PrivaPurchaseAuthVerifierVerify => {
+            assert (inMsg.valueCoins >= PRIVA_PURCHASE_AUTH_VERIFIER_MIN_VERIFY_VALUE) throw PrivaPurchaseAuthVerifierErrors.NotEnoughValue;
+            val messageTail = msg.forceLoadLazyObject();
+            if (!messageTail.isEmpty()) { throw PrivaPurchaseAuthVerifierErrors.InvalidInputs; }
+            assert (PrivaPurchaseAuthVerifier.create().verifyProof(msg)) throw PrivaPurchaseAuthVerifierErrors.WrongProof;
+        }
+        else => {
+            // An empty body is the standard StateInit deployment/top-up path.
+            // Any non-empty unknown body is malformed and cannot be treated as
+            // a successful verification.
+            assert (inMsg.body.isEmpty()) throw PrivaPurchaseAuthVerifierErrors.InvalidInputs;
+        }
+    }
 }
 
 get fun getPrivaPurchaseAuthCircuitVersion(): int {

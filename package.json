@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "node scripts/run-tests.cjs",
     "test:real-lifecycle": "npm run compile:settlement-minter && ZK_TELE_AUTH_ARTIFACTS_DIR=vendor/zk-tele-auth/artifacts node tests/priva-purchase-lifecycle.test.mjs",
+    "test:real-verifier": "acton build priva_purchase_auth_verifier_boundary && node tests/priva-verifier-boundary.test.mjs",
     "test:contracts": "acton test tests/acton --reporter console",
     "compile-contracts": "node scripts/compile-contracts.cjs",
     "compile:settlement-minter": "node scripts/compile-settlement-minter.cjs",
