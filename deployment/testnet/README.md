@@ -57,3 +57,33 @@ and payload signatures, public-key fingerprints, source-revision binding, and
 placeholder rejection. It still cannot prove reviewer independence or the
 authenticity of a chain trace; those require release-authority review of the
 published evidence.
+
+## Controlled testnet deployment
+
+The repository now includes `scripts/deploy_testnet_launchpad.tolk`. It takes
+the exact reviewed launchpad data cell and its pinned code/data hashes, derives
+the StateInit address, refuses an address or artifact mismatch, refuses an
+already deployed account, and prints the observed transaction hash. It runs in
+the emulator by default and cannot broadcast from a configured mnemonic wallet.
+
+Run the deterministic preflight first:
+
+```bash
+acton script scripts/deploy_testnet_launchpad.tolk \
+  <DATA_CELL_BOC_HEX> <EXPECTED_BASECHAIN_ADDRESS> \
+  <EXPECTED_LAUNCHPAD_CODE_HASH> <EXPECTED_DATA_CELL_HASH> <DEPLOY_VALUE_NANOTONS>
+```
+
+Only after `reviewed-init.json`, `reviewed-manifest.json`, and the signed
+release gate pass may the release authority run the same command with:
+
+```bash
+PRIVA_DEPLOY_NETWORK=testnet \
+  acton script scripts/deploy_testnet_launchpad.tolk \
+  --net testnet --tonconnect --explorer tonscan
+```
+
+The connected wallet will show and approve the transaction; the resulting
+address and transaction hash must then be recorded in the real manifest/evidence
+package. No live address, transaction hash, or reviewer signature is created by
+the emulator run.
