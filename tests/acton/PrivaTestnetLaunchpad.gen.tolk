@@ -94,6 +94,21 @@ fun PrivaTestnetLaunchpad.sendPrivaJettonExcesses(
     return net.send(from, genericMsg);
 }
 
+fun PrivaTestnetLaunchpad.sendPrivaMintFailure(
+    self,
+    from: address,
+    queryId: uint64,
+    config: SendParams = {},
+): SendResultList {
+    val genericMsg = createMessage({
+        bounce: config.bounce,
+        value: config.value,
+        dest: self.address,
+        body: PrivaMintFailure { queryId },
+    });
+    return net.send(from, genericMsg);
+}
+
 fun PrivaTestnetLaunchpad.sendPrivaClaimMinterAdmin(
     self,
     from: address,
@@ -131,4 +146,20 @@ fun PrivaTestnetLaunchpad.getPrivaTestnetLaunchpadVersion(self): int {
 
 fun PrivaTestnetLaunchpad.getPrivaTestnetBuyOpcode(self): int {
     return net.runGetMethod(self.address, "getPrivaTestnetBuyOpcode");
+}
+
+fun PrivaTestnetLaunchpad.getPrivaTestnetAccounting(self): PrivaTestnetAccountingView {
+    return net.runGetMethod(self.address, "getPrivaTestnetAccounting");
+}
+
+fun PrivaTestnetLaunchpad.getPrivaTestnetQueryState(self, queryId: uint64): int {
+    return net.runGetMethod(self.address, "getPrivaTestnetQueryState", [queryId]);
+}
+
+fun PrivaTestnetLaunchpad.getPrivaTestnetIdentityTotal(self, identityNullifier: uint256): coins {
+    return net.runGetMethod(self.address, "getPrivaTestnetIdentityTotal", [identityNullifier]);
+}
+
+fun PrivaTestnetLaunchpad.getPrivaTestnetQueryUsed(self, queryId: uint64): bool {
+    return net.runGetMethod(self.address, "getPrivaTestnetQueryUsed", [queryId]);
 }

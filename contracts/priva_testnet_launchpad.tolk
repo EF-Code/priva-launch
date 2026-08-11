@@ -4,7 +4,7 @@ import "@stdlib/exotic-cells"
 contract PrivaTestnetLaunchpad {
     description: "Fixed-price testnet launchpad with proof-bound allocation and bounce-safe refunds"
     storage: PrivaTestnetLaunchpadStorage
-    incomingMessages: PrivaTestnetBuy | PrivaRefundClaim | PrivaJettonExcesses | PrivaClaimMinterAdmin
+    incomingMessages: PrivaTestnetBuy | PrivaRefundClaim | PrivaJettonExcesses | PrivaMintFailure | PrivaClaimMinterAdmin
 }
 
 // Typed, testnet-candidate launchpad ABI.
@@ -21,6 +21,7 @@ const TEP74_MINT_OPCODE: int = 0x642b7d07;
 const TEP74_INTERNAL_TRANSFER_OPCODE: int = 0x178d4519;
 const TEP74_CLAIM_ADMIN_OPCODE: int = 0xfb88e119;
 const TEP74_EXCESSES_OPCODE: int = 0xd53276db;
+const PRIVA_MINT_FAILURE_OPCODE: int = 0x50525646; // "PRVF"
 
 enum PrivaTestnetLaunchpadErrors {
     PolicyAndStateNotImplemented = 901,
@@ -48,7 +49,8 @@ enum PrivaTestnetLaunchpadErrors {
     UnknownPendingMint = 923,
     UnauthorizedBounce = 924,
     UnknownRefund = 925,
-    UnauthorizedRefundClaim = 926
+    UnauthorizedRefundClaim = 926,
+    RefundSolvency = 927
 }
 
 const PRIVA_REFUND_CLAIM_OPCODE: int = 0x50525652; // "PRVR"
@@ -57,14 +59,20 @@ const PRIVA_CLAIM_MINTER_ADMIN_OPCODE: int = 0x50525641; // "PRVA"
 
 /// Immutable economic and settlement values. This is a StateInit reference,
 /// never a mutable administrator-managed configuration message.
+struct PrivaTestnetSettlementTerms {
+    jettonWalletCode: cell
+    walletFundingNanoTon: coins
+    mintMessageValueNanoTon: coins
+    refundGasReserveNanoTon: coins
+}
+
 struct PrivaTestnetSaleTerms {
     jettonMinter: address
     priceNanoTonPerSaleUnit: coins
     totalSaleUnits: uint64
     rawJettonPerSaleUnit: coins
     identityCapNanoTon: coins
-    walletFundingNanoTon: coins
-    mintMessageValueNanoTon: coins
+    settlement: Cell<PrivaTestnetSettlementTerms>
 }
 
 /// Immutable proof policy serialized in StateInit. No message can configure or
@@ -91,8 +99,11 @@ struct PrivaTestnetLaunchpadSettlementStorage {
 
 struct PrivaTestnetLaunchpadAccountingStorage {
     soldSaleUnits: uint64
+    pendingSaleUnits: uint64
     acceptedNanoTon: coins
+    pendingAcceptedNanoTon: coins
     usedActionNullifiers: map<uint256, bool>
+    usedQueryIds: map<uint64, bool>
     identityPurchaseTotals: map<uint256, coins>
     settlement: Cell<PrivaTestnetLaunchpadSettlementStorage>
 }
@@ -121,6 +132,8 @@ struct PrivaPendingMintAmounts {
 struct PrivaPendingMint {
     sender: address
     recipient: address
+    expectedJettonWallet: address
+    saleUnits: uint64
     authorization: Cell<PrivaPendingMintAuthorization>
     amounts: Cell<PrivaPendingMintAmounts>
     state: uint8
@@ -128,6 +141,14 @@ struct PrivaPendingMint {
 
 const PENDING_MINT_STATE: uint8 = 1;
 const REFUND_PENDING_STATE: uint8 = 2;
+const REFUND_SENT_STATE: uint8 = 3;
+
+struct PrivaTestnetAccountingView {
+    soldSaleUnits: uint64
+    pendingSaleUnits: uint64
+    acceptedNanoTon: coins
+    pendingAcceptedNanoTon: coins
+}
 
 fun PrivaTestnetLaunchpadStorage.load(): PrivaTestnetLaunchpadStorage {
     val data = contract.getData();
@@ -148,14 +169,21 @@ fun PrivaTestnetLaunchpadStorage.load(): PrivaTestnetLaunchpadStorage {
                     totalSaleUnits: 0,
                     rawJettonPerSaleUnit: 0,
                     identityCapNanoTon: 0,
-                    walletFundingNanoTon: 0,
-                    mintMessageValueNanoTon: 0,
+                    settlement: PrivaTestnetSettlementTerms {
+                        jettonWalletCode: createEmptyCell(),
+                        walletFundingNanoTon: 0,
+                        mintMessageValueNanoTon: 0,
+                        refundGasReserveNanoTon: 0,
+                    }.toCell(),
                 }.toCell(),
             }.toCell(),
             accounting: PrivaTestnetLaunchpadAccountingStorage {
                 soldSaleUnits: 0,
+                pendingSaleUnits: 0,
                 acceptedNanoTon: 0,
+                pendingAcceptedNanoTon: 0,
                 usedActionNullifiers: [],
+                usedQueryIds: [],
                 identityPurchaseTotals: [],
                 settlement: PrivaTestnetLaunchpadSettlementStorage {
                     pendingMints: [],
@@ -202,6 +230,12 @@ struct (0xd53276db) PrivaJettonExcesses {
     queryId: uint64
 }
 
+/// Terminal failure callback emitted by the reviewed settlement minter
+/// extension after its downstream wallet transfer has bounced.
+struct (0x50525646) PrivaMintFailure {
+    queryId: uint64
+}
+
 /// Decode the exact 17-element public-input envelope checked by the pinned
 /// verifier core. Parsing the same canonical envelope avoids a policy check on
 /// a differently serialized set of values.
@@ -218,6 +252,25 @@ fun parsePrivaPublicInputs(pubInputsCell: cell): array<int> {
     }
     if (payload.remainingBitsCount() != 0 || payload.remainingRefsCount() != 0) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
     return out;
+}
+
+/// Derive the canonical TEP-74 wallet address from the exact wallet code and
+/// immutable owner/master inputs. The code cell is pinned in StateInit so an
+/// attacker cannot nominate a different wallet implementation in a callback.
+fun calculateExpectedJettonWallet(owner: address, minter: address, walletCode: cell): address {
+    val walletData = beginCell()
+        .storeUint(0, 4) // status
+        .storeCoins(0)
+        .storeAddress(owner)
+        .storeAddress(minter)
+        .endCell();
+    val stateInit = beginCell()
+        .storeUint(0, 2) // no split depth, no special
+        .storeMaybeRef(walletCode)
+        .storeMaybeRef(walletData)
+        .storeUint(0, 1) // empty library
+        .endCell();
+    return address.fromWorkchainAndHash(0, stateInit.hash());
 }
 
 fun checkAddressBinding(inputs: array<int>, recipient: address) {
@@ -279,7 +332,7 @@ fun buildTep74InternalTransfer(
         .endCell();
 }
 
-/// Build the privileged `mint#21` body accepted by the selected TEP-74
+/// Build the privileged `mint#642b7d07` body accepted by the selected TEP-74
 /// reference minter. `walletFundingNanoTon` is distinct from the buyer's
 /// accepted price: it funds deploy/delivery of the recipient's jetton wallet.
 /// This helper does not create or send an outgoing message.
@@ -306,22 +359,25 @@ fun buildTep74MintBody(
 }
 
 fun checkSaleTerms(terms: PrivaTestnetSaleTerms) {
+    val settlement = terms.settlement.load();
     assert (terms.priceNanoTonPerSaleUnit > 0 && terms.totalSaleUnits > 0) throw PrivaTestnetLaunchpadErrors.InvalidSaleTerms;
     assert (terms.rawJettonPerSaleUnit > 0 && terms.identityCapNanoTon > 0) throw PrivaTestnetLaunchpadErrors.InvalidSaleTerms;
-    assert (terms.walletFundingNanoTon > 0 && terms.mintMessageValueNanoTon >= terms.walletFundingNanoTon) throw PrivaTestnetLaunchpadErrors.InvalidSaleTerms;
+    assert (settlement.walletFundingNanoTon > 0 && settlement.mintMessageValueNanoTon >= settlement.walletFundingNanoTon) throw PrivaTestnetLaunchpadErrors.InvalidSaleTerms;
+    assert (settlement.refundGasReserveNanoTon > 0) throw PrivaTestnetLaunchpadErrors.InvalidSaleTerms;
 }
 
 fun emitTep74Mint(queryId: uint64, recipient: address, rawJettonAmount: coins, terms: PrivaTestnetSaleTerms) {
+    val settlement = terms.settlement.load();
     val body = buildTep74MintBody(
         queryId,
         recipient,
-        terms.walletFundingNanoTon,
+        settlement.walletFundingNanoTon,
         rawJettonAmount,
         contract.getAddress(),
     );
     val mintMessage = createMessage({
         bounce: BounceMode.RichBounce,
-        value: terms.mintMessageValueNanoTon,
+        value: settlement.mintMessageValueNanoTon,
         dest: terms.jettonMinter,
         body,
     });
@@ -339,13 +395,13 @@ fun startBuy(sender: address, valueCoins: coins, msg: PrivaTestnetBuy) {
     val policy = storage.policy.load();
     checkFixedBuySignals(inputs, msg.recipient, policy);
     val terms = policy.saleTerms.load();
+    val settlementTerms = terms.settlement.load();
     checkSaleTerms(terms);
 
-    // maxValue is the exact requested gross purchase value. Attaching more
-    // than this is allowed only as a recoverable refund; attaching less is
-    // rejected before any proof-derived state is consumed.
-    assert (msg.maxValue > 0 && valueCoins >= msg.maxValue) throw PrivaTestnetLaunchpadErrors.InvalidPurchaseValue;
-    assert (msg.maxValue >= terms.mintMessageValueNanoTon) throw PrivaTestnetLaunchpadErrors.InvalidPurchaseValue;
+    // maxValue is the exact requested sale value. The immutable gas reserve
+    // remains in the launchpad; only value above price + reserve is refundable.
+    assert (msg.maxValue > 0 && valueCoins >= msg.maxValue + settlementTerms.refundGasReserveNanoTon) throw PrivaTestnetLaunchpadErrors.InvalidPurchaseValue;
+    assert (msg.maxValue >= settlementTerms.mintMessageValueNanoTon) throw PrivaTestnetLaunchpadErrors.InvalidPurchaseValue;
     val pricePerUnit = terms.priceNanoTonPerSaleUnit as int;
     assert ((msg.maxValue as int) % pricePerUnit == 0) throw PrivaTestnetLaunchpadErrors.InvalidPurchaseValue;
     val requestedUnits = (msg.maxValue as int) / pricePerUnit;
@@ -355,7 +411,9 @@ fun startBuy(sender: address, valueCoins: coins, msg: PrivaTestnetBuy) {
     val identityNullifier = inputs.get(0) as uint256;
     val actionNullifier = inputs.get(1) as uint256;
     assert (!accounting.usedActionNullifiers.exists(actionNullifier)) throw PrivaTestnetLaunchpadErrors.ActionAlreadyUsed;
-    assert (accounting.soldSaleUnits <= terms.totalSaleUnits && requestedUnits <= ((terms.totalSaleUnits as int) - (accounting.soldSaleUnits as int))) throw PrivaTestnetLaunchpadErrors.SoldOut;
+    assert (!accounting.usedQueryIds.exists(msg.queryId)) throw PrivaTestnetLaunchpadErrors.QueryAlreadyPending;
+    val committedUnits = (accounting.soldSaleUnits as int) + (accounting.pendingSaleUnits as int);
+    assert (committedUnits <= (terms.totalSaleUnits as int) && requestedUnits <= ((terms.totalSaleUnits as int) - committedUnits)) throw PrivaTestnetLaunchpadErrors.SoldOut;
     val identityPrevious = accounting.identityPurchaseTotals.get(identityNullifier);
     val identityTotal: coins = identityPrevious.isFound ? identityPrevious.loadValue() : 0;
     assert (identityTotal + msg.maxValue <= terms.identityCapNanoTon) throw PrivaTestnetLaunchpadErrors.IdentityCapExceeded;
@@ -363,10 +421,12 @@ fun startBuy(sender: address, valueCoins: coins, msg: PrivaTestnetBuy) {
     var settlement = accounting.settlement.load();
     assert (!settlement.pendingMints.exists(msg.queryId)) throw PrivaTestnetLaunchpadErrors.QueryAlreadyPending;
     val rawJettonAmount = (((msg.maxValue as int) * (terms.rawJettonPerSaleUnit as int)) / pricePerUnit) as coins;
-    val excess = valueCoins - msg.maxValue;
+    val excess = valueCoins - msg.maxValue - settlementTerms.refundGasReserveNanoTon;
     val pending = PrivaPendingMint {
         sender,
         recipient: msg.recipient,
+        expectedJettonWallet: calculateExpectedJettonWallet(msg.recipient, terms.jettonMinter, settlementTerms.jettonWalletCode),
+        saleUnits: requestedUnits as uint64,
         authorization: PrivaPendingMintAuthorization {
             identityNullifier,
             actionNullifier,
@@ -380,18 +440,101 @@ fun startBuy(sender: address, valueCoins: coins, msg: PrivaTestnetBuy) {
         state: PENDING_MINT_STATE,
     };
     accounting.usedActionNullifiers.set(actionNullifier, true);
+    accounting.usedQueryIds.set(msg.queryId, true);
     accounting.identityPurchaseTotals.set(identityNullifier, identityTotal + msg.maxValue);
-    accounting.soldSaleUnits = accounting.soldSaleUnits + (requestedUnits as uint64);
-    accounting.acceptedNanoTon = accounting.acceptedNanoTon + msg.maxValue;
+    accounting.pendingSaleUnits = accounting.pendingSaleUnits + (requestedUnits as uint64);
+    accounting.pendingAcceptedNanoTon = accounting.pendingAcceptedNanoTon + msg.maxValue;
     settlement.pendingMints.set(msg.queryId, pending.toCell());
-    if (excess > 0) { settlement.userRefunds.set(msg.queryId, pending.toCell()); }
     accounting.settlement = settlement.toCell();
     storage.accounting = accounting.toCell();
     storage.save();
     emitTep74Mint(msg.queryId, msg.recipient, rawJettonAmount, terms);
 }
 
-fun emitRefund(queryId: uint64, sender: address, refundNanoTon: coins) {
+fun makeRefundRecord(pending: PrivaPendingMint, refundNanoTon: coins, state: uint8): PrivaPendingMint {
+    return PrivaPendingMint {
+        sender: pending.sender,
+        recipient: pending.recipient,
+        expectedJettonWallet: pending.expectedJettonWallet,
+        saleUnits: 0,
+        authorization: pending.authorization,
+        amounts: PrivaPendingMintAmounts {
+            rawJettonAmount: 0,
+            acceptedNanoTon: 0,
+            excessNanoTon: 0,
+            refundNanoTon,
+        }.toCell(),
+        state,
+    };
+}
+
+/// Release a pending reservation after a terminal mint failure. The action
+/// nullifier and query ID remain consumed, preventing proof or message replay.
+fun settleMintFailure(queryId: uint64, sender: address, returnedValue: coins) {
+    var storage = PrivaTestnetLaunchpadStorage.load();
+    val terms = storage.policy.load().saleTerms.load();
+    assert (sender == terms.jettonMinter) throw PrivaTestnetLaunchpadErrors.UnauthorizedBounce;
+    var accounting = storage.accounting.load();
+    var settlement = accounting.settlement.load();
+    val found = settlement.pendingMints.get(queryId);
+    assert (found.isFound) throw PrivaTestnetLaunchpadErrors.UnknownPendingMint;
+    val pending = found.loadValue().load();
+    assert (pending.state == PENDING_MINT_STATE) throw PrivaTestnetLaunchpadErrors.UnknownPendingMint;
+    val authorization = pending.authorization.load();
+    val amounts = pending.amounts.load();
+    val identityTotal = accounting.identityPurchaseTotals.mustGet(authorization.identityNullifier);
+    assert (accounting.pendingSaleUnits >= pending.saleUnits) throw PrivaTestnetLaunchpadErrors.UnknownPendingMint;
+    assert (accounting.pendingAcceptedNanoTon >= amounts.acceptedNanoTon) throw PrivaTestnetLaunchpadErrors.UnknownPendingMint;
+    assert (identityTotal >= amounts.acceptedNanoTon) throw PrivaTestnetLaunchpadErrors.UnknownPendingMint;
+
+    accounting.pendingSaleUnits = accounting.pendingSaleUnits - pending.saleUnits;
+    accounting.pendingAcceptedNanoTon = accounting.pendingAcceptedNanoTon - amounts.acceptedNanoTon;
+    if (identityTotal == amounts.acceptedNanoTon) {
+        accounting.identityPurchaseTotals.delete(authorization.identityNullifier);
+    } else {
+        accounting.identityPurchaseTotals.set(authorization.identityNullifier, identityTotal - amounts.acceptedNanoTon);
+    }
+    settlement.pendingMints.delete(queryId);
+    val refundNanoTon = amounts.acceptedNanoTon + amounts.excessNanoTon + returnedValue;
+    if (refundNanoTon > 0) {
+        settlement.userRefunds.set(queryId, makeRefundRecord(pending, refundNanoTon, REFUND_PENDING_STATE).toCell());
+    }
+    accounting.settlement = settlement.toCell();
+    storage.accounting = accounting.toCell();
+    storage.save();
+}
+
+/// Finalize only after an authenticated excesses message from the exact
+/// recipient wallet derived from immutable TEP-74 code/data.
+fun settleMintSuccess(queryId: uint64, sender: address, returnedValue: coins) {
+    var storage = PrivaTestnetLaunchpadStorage.load();
+    var accounting = storage.accounting.load();
+    var settlement = accounting.settlement.load();
+    val found = settlement.pendingMints.get(queryId);
+    assert (found.isFound) throw PrivaTestnetLaunchpadErrors.UnknownPendingMint;
+    val pending = found.loadValue().load();
+    assert (pending.state == PENDING_MINT_STATE) throw PrivaTestnetLaunchpadErrors.UnknownPendingMint;
+    assert (pending.expectedJettonWallet == sender) throw PrivaTestnetLaunchpadErrors.UnauthorizedBounce;
+    val amounts = pending.amounts.load();
+    assert (accounting.pendingSaleUnits >= pending.saleUnits) throw PrivaTestnetLaunchpadErrors.UnknownPendingMint;
+    assert (accounting.pendingAcceptedNanoTon >= amounts.acceptedNanoTon) throw PrivaTestnetLaunchpadErrors.UnknownPendingMint;
+
+    accounting.pendingSaleUnits = accounting.pendingSaleUnits - pending.saleUnits;
+    accounting.pendingAcceptedNanoTon = accounting.pendingAcceptedNanoTon - amounts.acceptedNanoTon;
+    accounting.soldSaleUnits = accounting.soldSaleUnits + pending.saleUnits;
+    accounting.acceptedNanoTon = accounting.acceptedNanoTon + amounts.acceptedNanoTon;
+    settlement.pendingMints.delete(queryId);
+    val refundNanoTon = amounts.excessNanoTon + returnedValue;
+    if (refundNanoTon > 0) {
+        settlement.userRefunds.set(queryId, makeRefundRecord(pending, refundNanoTon, REFUND_PENDING_STATE).toCell());
+    }
+    accounting.settlement = settlement.toCell();
+    storage.accounting = accounting.toCell();
+    storage.save();
+}
+
+fun emitRefund(queryId: uint64, sender: address, refundNanoTon: coins, gasReserveNanoTon: coins) {
+    reserveToncoinsOnBalance(gasReserveNanoTon, RESERVE_MODE_EXACT_AMOUNT | RESERVE_MODE_BOUNCE_ON_ACTION_FAIL);
     val refundMessage = createMessage({
         bounce: BounceMode.RichBounce,
         value: refundNanoTon,
@@ -403,6 +546,7 @@ fun emitRefund(queryId: uint64, sender: address, refundNanoTon: coins) {
 
 fun claimMinterAdmin(msg: PrivaClaimMinterAdmin) {
     val terms = PrivaTestnetLaunchpadStorage.load().policy.load().saleTerms.load();
+    val settlement = terms.settlement.load();
     checkSaleTerms(terms);
     val claimBody = beginCell()
         .storeUint(TEP74_CLAIM_ADMIN_OPCODE, 32)
@@ -410,7 +554,7 @@ fun claimMinterAdmin(msg: PrivaClaimMinterAdmin) {
         .endCell();
     val claimMessage = createMessage({
         bounce: BounceMode.RichBounce,
-        value: terms.mintMessageValueNanoTon,
+        value: settlement.mintMessageValueNanoTon,
         dest: terms.jettonMinter,
         body: claimBody,
     });
@@ -423,17 +567,24 @@ fun claimRefund(sender: address, msg: PrivaRefundClaim) {
     var settlement = accounting.settlement.load();
     val found = settlement.userRefunds.get(msg.queryId);
     assert (found.isFound) throw PrivaTestnetLaunchpadErrors.UnknownRefund;
-    val pending = found.loadValue().load();
+    var pending = found.loadValue().load();
     assert (pending.sender == sender) throw PrivaTestnetLaunchpadErrors.UnauthorizedRefundClaim;
+    assert (pending.state == REFUND_PENDING_STATE) throw PrivaTestnetLaunchpadErrors.UnknownRefund;
     val amounts = pending.amounts.load();
     assert (amounts.refundNanoTon > 0) throw PrivaTestnetLaunchpadErrors.UnknownRefund;
-    // Remove before sending. A rich bounce deterministically recreates it,
-    // preventing both a double claim and a lost refund.
-    settlement.userRefunds.delete(msg.queryId);
+    val terms = storage.policy.load().saleTerms.load();
+    val settlementTerms = terms.settlement.load();
+    checkSaleTerms(terms);
+    assert (contract.getOriginalBalance() >= amounts.refundNanoTon + settlementTerms.refundGasReserveNanoTon) throw PrivaTestnetLaunchpadErrors.RefundSolvency;
+    // Keep a sent marker so a second claim cannot race this outbound transfer.
+    // A rich bounce changes it back to REFUND_PENDING after authenticating the
+    // original recipient and exact amount.
+    pending.state = REFUND_SENT_STATE;
+    settlement.userRefunds.set(msg.queryId, pending.toCell());
     accounting.settlement = settlement.toCell();
     storage.accounting = accounting.toCell();
     storage.save();
-    emitRefund(msg.queryId, sender, amounts.refundNanoTon);
+    emitRefund(msg.queryId, sender, amounts.refundNanoTon, settlementTerms.refundGasReserveNanoTon);
 }
 
 fun onInternalMessage(inMsg: InMessage) {
@@ -448,6 +599,30 @@ fun onInternalMessage(inMsg: InMessage) {
             val messageTail = msg.forceLoadLazyObject();
             if (!messageTail.isEmpty()) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
                 startBuy(inMsg.senderAddress, inMsg.valueCoins, msg);
+            }
+            else => { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
+        }
+        return;
+    }
+    if (inMsg.body.preloadUint(32) == TEP74_EXCESSES_OPCODE) {
+        val excesses = lazy PrivaJettonExcesses.fromSlice(inMsg.body);
+        match (excesses) {
+            PrivaJettonExcesses => {
+                val messageTail = excesses.forceLoadLazyObject();
+                if (!messageTail.isEmpty()) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
+                settleMintSuccess(excesses.queryId, inMsg.senderAddress, inMsg.valueCoins);
+            }
+            else => { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
+        }
+        return;
+    }
+    if (inMsg.body.preloadUint(32) == PRIVA_MINT_FAILURE_OPCODE) {
+        val failure = lazy PrivaMintFailure.fromSlice(inMsg.body);
+        match (failure) {
+            PrivaMintFailure => {
+                val messageTail = failure.forceLoadLazyObject();
+                if (!messageTail.isEmpty()) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
+                settleMintFailure(failure.queryId, inMsg.senderAddress, inMsg.valueCoins);
             }
             else => { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
         }
@@ -488,43 +663,7 @@ fun onBouncedMessage(inMsg: InMessageBounced) {
     if (opcode == TEP74_MINT_OPCODE) {
         if (body.remainingBitsCount() < 64) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
         val queryId = body.loadUint(64) as uint64;
-        var storage = PrivaTestnetLaunchpadStorage.load();
-        val policy = storage.policy.load();
-        val terms = policy.saleTerms.load();
-        assert (inMsg.senderAddress == terms.jettonMinter) throw PrivaTestnetLaunchpadErrors.UnauthorizedBounce;
-        var accounting = storage.accounting.load();
-        var settlement = accounting.settlement.load();
-        val found = settlement.pendingMints.get(queryId);
-        assert (found.isFound) throw PrivaTestnetLaunchpadErrors.UnknownPendingMint;
-        val pending = found.loadValue().load();
-        val authorization = pending.authorization.load();
-        val amounts = pending.amounts.load();
-        assert (accounting.soldSaleUnits >= (amounts.rawJettonAmount / terms.rawJettonPerSaleUnit)) throw PrivaTestnetLaunchpadErrors.UnknownPendingMint;
-        assert (accounting.acceptedNanoTon >= amounts.acceptedNanoTon) throw PrivaTestnetLaunchpadErrors.UnknownPendingMint;
-        val identityTotal = accounting.identityPurchaseTotals.mustGet(authorization.identityNullifier);
-        assert (identityTotal >= amounts.acceptedNanoTon) throw PrivaTestnetLaunchpadErrors.UnknownPendingMint;
-        // A failed mint never leaves a paid allocation. Keep the action
-        // nullifier consumed, but restore sale/cap accounting and make the
-        // full received value claimable by the original sender.
-        accounting.soldSaleUnits = accounting.soldSaleUnits - ((amounts.rawJettonAmount / terms.rawJettonPerSaleUnit) as uint64);
-        accounting.acceptedNanoTon = accounting.acceptedNanoTon - amounts.acceptedNanoTon;
-        accounting.identityPurchaseTotals.set(authorization.identityNullifier, identityTotal - amounts.acceptedNanoTon);
-        settlement.pendingMints.delete(queryId);
-        settlement.userRefunds.set(queryId, PrivaPendingMint {
-            sender: pending.sender,
-            recipient: pending.recipient,
-            authorization: pending.authorization,
-            amounts: PrivaPendingMintAmounts {
-                rawJettonAmount: 0,
-                acceptedNanoTon: 0,
-                excessNanoTon: 0,
-                refundNanoTon: amounts.acceptedNanoTon + amounts.excessNanoTon,
-            }.toCell(),
-            state: REFUND_PENDING_STATE,
-        }.toCell());
-        accounting.settlement = settlement.toCell();
-        storage.accounting = accounting.toCell();
-        storage.save();
+        settleMintFailure(queryId, inMsg.senderAddress, inMsg.valueCoins);
         return;
     }
     if (opcode == PRIVA_REFUND_TRANSFER_OPCODE) {
@@ -532,26 +671,19 @@ fun onBouncedMessage(inMsg: InMessageBounced) {
         val queryId = body.loadUint(64) as uint64;
         val refundNanoTon = body.loadCoins();
         if (refundNanoTon == 0) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
+        if (body.remainingBitsCount() != 0 || body.remainingRefsCount() != 0) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
         var storage = PrivaTestnetLaunchpadStorage.load();
         var accounting = storage.accounting.load();
         var settlement = accounting.settlement.load();
-        // Sender of a bounced refund is its original destination. Recreate a
-        // minimal claim record so that the original recipient may retry.
-        settlement.userRefunds.set(queryId, PrivaPendingMint {
-            sender: inMsg.senderAddress,
-            recipient: inMsg.senderAddress,
-            authorization: PrivaPendingMintAuthorization {
-                identityNullifier: 0,
-                actionNullifier: 0,
-            }.toCell(),
-            amounts: PrivaPendingMintAmounts {
-                rawJettonAmount: 0,
-                acceptedNanoTon: 0,
-                excessNanoTon: 0,
-                refundNanoTon,
-            }.toCell(),
-            state: REFUND_PENDING_STATE,
-        }.toCell());
+        val found = settlement.userRefunds.get(queryId);
+        assert (found.isFound) throw PrivaTestnetLaunchpadErrors.UnknownRefund;
+        var pending = found.loadValue().load();
+        val amounts = pending.amounts.load();
+        assert (pending.state == REFUND_SENT_STATE) throw PrivaTestnetLaunchpadErrors.UnknownRefund;
+        assert (pending.sender == inMsg.senderAddress) throw PrivaTestnetLaunchpadErrors.UnauthorizedBounce;
+        assert (amounts.refundNanoTon == refundNanoTon) throw PrivaTestnetLaunchpadErrors.UnauthorizedBounce;
+        pending.state = REFUND_PENDING_STATE;
+        settlement.userRefunds.set(queryId, pending.toCell());
         accounting.settlement = settlement.toCell();
         storage.accounting = accounting.toCell();
         storage.save();
@@ -564,4 +696,40 @@ get fun getPrivaTestnetLaunchpadVersion(): int {
 
 get fun getPrivaTestnetBuyOpcode(): int {
     return PRIVA_TESTNET_BUY_OPCODE;
+}
+
+get fun getPrivaTestnetAccounting(): PrivaTestnetAccountingView {
+    val accounting = PrivaTestnetLaunchpadStorage.load().accounting.load();
+    return PrivaTestnetAccountingView {
+        soldSaleUnits: accounting.soldSaleUnits,
+        pendingSaleUnits: accounting.pendingSaleUnits,
+        acceptedNanoTon: accounting.acceptedNanoTon,
+        pendingAcceptedNanoTon: accounting.pendingAcceptedNanoTon,
+    };
+}
+
+/// Returns 0 for an unused query, 1 for a pending mint, 2 for a refundable
+/// claim, and 3 for a successfully sent refund awaiting bounce finality.
+get fun getPrivaTestnetQueryState(queryId: uint64): int {
+    val accounting = PrivaTestnetLaunchpadStorage.load().accounting.load();
+    val settlement = accounting.settlement.load();
+    val pending = settlement.pendingMints.get(queryId);
+    if (pending.isFound) {
+        return pending.loadValue().load().state;
+    }
+    val refund = settlement.userRefunds.get(queryId);
+    if (refund.isFound) {
+        return refund.loadValue().load().state;
+    }
+    return 0;
+}
+
+get fun getPrivaTestnetIdentityTotal(identityNullifier: uint256): coins {
+    val accounting = PrivaTestnetLaunchpadStorage.load().accounting.load();
+    val total = accounting.identityPurchaseTotals.get(identityNullifier);
+    return total.isFound ? total.loadValue() : 0;
+}
+
+get fun getPrivaTestnetQueryUsed(queryId: uint64): bool {
+    return PrivaTestnetLaunchpadStorage.load().accounting.load().usedQueryIds.exists(queryId);
 }
