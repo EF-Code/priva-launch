@@ -24,6 +24,10 @@ if (manifest.network !== 'testnet') throw new Error('Initialization manifest net
 if (manifest.status !== 'reviewed') throw new Error('Initialization manifest must have status "reviewed".');
 if (!revision.test(manifest.sourceRevision || '')) throw new Error('sourceRevision must be a full Git SHA.');
 if (!sha256.test(manifest.launchpadCodeSha256 || '')) throw new Error('launchpadCodeSha256 must be a SHA-256 digest.');
+if (!sha256.test(manifest.settlementMinterCodeSha256 || '')) throw new Error('settlementMinterCodeSha256 must be a SHA-256 digest.');
+if (!sha256.test(manifest.settlementMinterWalletCodeSha256 || '')) throw new Error('settlementMinterWalletCodeSha256 must be a SHA-256 digest.');
+if (manifest.settlementMinterUpstreamRevision !== 'd55f228edb0eb477cb4845d67e0dacc6489c6b57') throw new Error('settlementMinterUpstreamRevision must pin the reviewed upstream revision.');
+if (manifest.settlementMinterCallbackOpcode !== '0x50525646') throw new Error('settlementMinterCallbackOpcode must be PRIVA_MINT_FAILURE (0x50525646).');
 if (!sha256.test(manifest.initialDataCellHash || '')) throw new Error('initialDataCellHash must be a TON cell hash digest.');
 if (!manifest.circuit || manifest.circuit.version !== 1 || !sha256.test(manifest.circuit.verificationKeySha256 || '')) throw new Error('Circuit must pin version 1 and its verification-key SHA-256.');
 if (!manifest.review || !Array.isArray(manifest.review.approvals) || manifest.review.approvals.length < 2) throw new Error('At least two independent public review approvals are required.');

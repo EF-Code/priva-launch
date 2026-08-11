@@ -2,7 +2,11 @@
   "network": "testnet",
   "status": "reviewed",
   "sourceRevision": "798ec80f2d000000000000000000000000000000",
-  "launchpadCodeSha256": "9a1c09ef52e25fdfe03f62daa1d049f92ea2e7c375987dca2c7c143d5ac2ab05",
+  "launchpadCodeSha256": "0b00311a28f6955de08cd67a75edeaf04f44db5f27a29a810ce63da69343d587",
+  "settlementMinterCodeSha256": "12735d631a291d42da0ea5895cf274f66af22d0c22f0229751296b3c818b5f5d",
+  "settlementMinterWalletCodeSha256": "8d28ea421b77e805fea52acf335296499f03aec8e9fd21ddb5f2564aa65c48de",
+  "settlementMinterUpstreamRevision": "d55f228edb0eb477cb4845d67e0dacc6489c6b57",
+  "settlementMinterCallbackOpcode": "0x50525646",
   "initialDataCellHash": "aab6bfb90c4c839b7c91d08dbe7159fff481215a7d69879186f5784f0053c0b0",
   "circuit": { "version": 1, "verificationKeySha256": "7454d4f4663b455dd2753dec56acabce5bb662a89a50dc22d22d6c07ad5121e4" },
   "review": { "approvals": [

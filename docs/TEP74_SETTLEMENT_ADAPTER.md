@@ -4,11 +4,17 @@
 `d55f228edb0eb477cb4845d67e0dacc6489c6b57` from
 `https://github.com/ton-blockchain/jetton-contract`.
 
-Priva's testnet candidate uses the reference minter's `mint` operation
+Priva's testnet candidate uses a checked-in settlement fork at
+`contracts/priva_settlement_minter.fc`. The fork is based on the reference
+minter at the revision above and preserves its `mint` operation
 (`0x642b7d07`). The launchpad must become the minter admin through the
-reference minter's two-stage `change_admin` (`0x6501f354`) and
-`claim_admin` (`0xfb88e119`) flow; no creator or operator may mint. The minter
-body is:
+two-stage `change_admin` (`0x6501f354`) and `claim_admin` (`0xfb88e119`)
+flow; after claim the admin is locked and the generic `upgrade` operation is
+disabled. No creator or operator may mint. The fork emits the authenticated
+`PRIVA_MINT_FAILURE` callback (`0x50525646`) when a downstream wallet bounce
+rolls supply back.
+
+The minter body is:
 
 ```text
 mint#642b7d07 query_id:uint64 recipient:MsgAddress amount:Coins
@@ -38,13 +44,12 @@ totals. It moves the reserved refundable value to a user-claimable refund
 record; a refund bounce cannot redirect value to governance.
 
 The reference minter rolls back supply when its outbound internal transfer
-bounces, but it does not provide a complete terminal failure callback to the
-launchpad for every downstream wallet failure. Priva must therefore track its
-own outbound mint/bounce and use a reviewed settlement extension or equivalent
-authenticated failure path before exposing a public buy handler. No handler
-may use an accepted outbound send as proof that recipient jettons were minted,
-and no arbitrary timeout may refund a purchase while a late success remains
-possible.
+bounces, but it does not provide a terminal callback. The settlement fork
+handles both ordinary truncated bounces (`0xffffffff`) and rich bounces
+(`0xfffffffe`), uses the locked admin as the callback destination, and sends
+the returned TON value with fees paid separately. No handler may use an
+accepted outbound send as proof that recipient jettons were minted, and no
+arbitrary timeout may refund a purchase while a late success remains possible.
 
 ## Required Acton traces
 

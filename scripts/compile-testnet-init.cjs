@@ -10,9 +10,15 @@ if (!file.startsWith(`${root}${path.sep}`)) throw new Error('Initialization mani
 const manifest = JSON.parse(fs.readFileSync(file, 'utf8'));
 if (manifest.network !== 'testnet' || manifest.status !== 'reviewed') throw new Error('Only a reviewed testnet initialization manifest may be compiled.');
 const buildArtifact = JSON.parse(fs.readFileSync(path.join(root, 'build', 'priva_testnet_launchpad.json'), 'utf8'));
+const minterArtifact = JSON.parse(fs.readFileSync(path.join(root, 'build', 'priva_settlement_minter.json'), 'utf8'));
+const walletArtifact = JSON.parse(fs.readFileSync(path.join(root, 'vendor', 'ton-token-contract', 'build', 'JettonWallet.compiled.json'), 'utf8'));
+const walletLibraryCellHash = require('@ton/core').Cell.fromBoc(Buffer.from(walletArtifact.libraryBoc, 'hex'))[0].hash().toString('hex');
 const codeCellHash = String(buildArtifact.hash || '').toLowerCase();
 if (!/^[a-f0-9]{64}$/.test(codeCellHash)) throw new Error('Acton build artifact has no valid launchpad code-cell hash. Run acton build first.');
 if (manifest.launchpadCodeSha256 !== codeCellHash) throw new Error('Manifest launchpadCodeSha256 does not match the current Acton build artifact.');
+if (manifest.settlementMinterCodeSha256 !== minterArtifact.codeCellHash) throw new Error('Manifest settlementMinterCodeSha256 does not match the settlement-minter artifact.');
+if (manifest.settlementMinterCallbackOpcode !== minterArtifact.callback.opcode) throw new Error('Manifest settlementMinterCallbackOpcode does not match the settlement-minter artifact.');
+if (manifest.settlementMinterWalletCodeSha256 !== walletLibraryCellHash) throw new Error('Manifest settlementMinterWalletCodeSha256 does not match the pinned wallet library artifact.');
 
 const u = (value, bits, name) => {
   if (typeof value !== 'string' || !/^(0|[1-9][0-9]*)$/.test(value)) throw new Error(`${name} must be a canonical decimal string.`);
@@ -54,6 +60,8 @@ const data = beginCell().storeRef(policyCell).storeRef(accounting).endCell();
 const result = {
   schemaVersion: 1,
   launchpadCodeCellHash: codeCellHash,
+  settlementMinterCodeCellHash: minterArtifact.codeCellHash,
+  settlementMinterWalletLibraryCellHash: walletLibraryCellHash,
   initialDataCellHash: data.hash().toString('hex'),
   initialDataBocBase64: data.toBoc().toString('base64'),
   policyCellHash: policyCell.hash().toString('hex'),

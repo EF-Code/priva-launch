@@ -37,10 +37,11 @@ integrity only; it does not certify an address, operator, or audit.
 
 Before any StateInit is built, validate its separate reviewed initialization
 record with `npm run check:testnet-init -- deployment/testnet/reviewed-init.json`.
-It pins the address-binding proof ABI, immutable verifier policy, jetton minter and sale
-terms, launchpad code hash, and two public review evidence URLs. The fixture is
-only a structural example; never deploy it or replace independent review with
-placeholder URLs.
+It pins the address-binding proof ABI, immutable verifier policy, settlement
+minter and wallet-library code hashes, the pinned upstream minter revision and
+`PRIVA_MINT_FAILURE` opcode, jetton sale terms, launchpad code hash, and two
+public review evidence URLs. The fixture is only a structural example; never
+deploy it or replace independent review with placeholder URLs.
 
 `npm run compile:testnet-init -- deployment/testnet/reviewed-init.json` emits
 the exact initial-data cell hash and BOC. The manifest must contain that hash;

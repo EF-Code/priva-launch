@@ -8,6 +8,11 @@
     "source": "vendor/ton-token-contract/contracts/jetton-minter.fc",
     "sourceSha256": "59c7b2e139a7489fa29919b27ccf41ed329f1481c709a444b40860b7af1ff5e5"
   },
+  "wallet": {
+    "source": "vendor/ton-token-contract/build/JettonWallet.compiled.json",
+    "codeCellHash": "ba2918c8947e9b25af9ac1b883357754173e5812f807a3d6e642a14709595395",
+    "libraryCellHash": "8d28ea421b77e805fea52acf335296499f03aec8e9fd21ddb5f2564aa65c48de"
+  },
   "compiler": "@ton-community/func-js@0.11.0",
   "codeCellHash": "12735d631a291d42da0ea5895cf274f66af22d0c22f0229751296b3c818b5f5d",
   "callback": {

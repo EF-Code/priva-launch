@@ -5,6 +5,7 @@ const { runFixedSaleTests } = require('./fixed-sale.test.cjs');
 const { runDeploymentConfigTests } = require('./deployment-config.test.cjs');
 const { runGatewayClientTests } = require('./gateway-client.test.cjs');
 const { runTestnetLifecycleBoundaryTests } = require('./testnet-lifecycle-boundary.test.cjs');
+const { runSettlementMinterBoundaryTests } = require('./settlement-minter-boundary.test.cjs');
 const { execFileSync } = require('child_process');
 const path = require('path');
 
@@ -35,6 +36,7 @@ function runTests() {
   runVerifierBoundaryTests();
   runFixedSaleTests();
   runTestnetLifecycleBoundaryTests();
+  runSettlementMinterBoundaryTests();
   execFileSync('node', ['scripts/check-testnet-manifest.cjs', 'tests/fixtures/testnet-manifest.valid.json'], { cwd: path.join(__dirname, '..'), stdio: 'inherit' });
   execFileSync('node', ['scripts/check-testnet-init-manifest.cjs', 'tests/fixtures/testnet-init.valid.json'], { cwd: path.join(__dirname, '..'), stdio: 'inherit' });
   execFileSync('node', ['scripts/compile-testnet-init.cjs', 'tests/fixtures/testnet-init.valid.json'], { cwd: path.join(__dirname, '..'), stdio: 'inherit' });
