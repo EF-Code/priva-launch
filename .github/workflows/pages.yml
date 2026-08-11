@@ -1,0 +1,56 @@
+name: Deploy Priva Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build app
+        env:
+          PRIVA_PAGES_BUILD: '1'
+        run: npm run build
+      - name: Add public metadata and TonConnect icon
+        run: |
+          mkdir -p dist/testnet/v1
+          cp docs/testnet/v1/metadata.json dist/testnet/v1/metadata.json
+          cp docs/testnet/v1/token.svg dist/testnet/v1/token.svg
+          convert public/icon.svg -resize 180x180 dist/icon-180.png
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

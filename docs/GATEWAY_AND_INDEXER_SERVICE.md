@@ -1,6 +1,11 @@
 # Gateway and Indexer Service Contract
 
-**Status:** Interface specification only; no endpoint is configured in the demo.
+**Status:** Interface specification. A loopback-only development adapter is
+available under `services/`; no public endpoint is configured in the demo.
+
+The local adapter is intentionally not a deployment endpoint. It requires
+`PRIVA_GATEWAY_MODE=local`, binds to `127.0.0.1`, and refuses missing operator
+policy or secret inputs. See [services/README.md](../services/README.md).
 
 ## Gateway responsibility
 
@@ -31,6 +36,15 @@ data, unsupported operations, replayed request nonces within its rate-limit
 window, and a request that does not match its published issuer policy. The
 response contains only the proof, canonical public inputs, proof expiry, and
 circuit version. Clients still must wait for on-chain verification.
+
+The checked-in Priva browser client sends friendly addresses and a display
+launch ID. The vendored `zk-tele-auth` v2 prover accepts field-element launch
+and address-limb inputs. The local adapter performs this conversion, invokes
+the pinned prover, self-verifies the Groth16 payload, and splits the Tolk proof
+message into the `proof` and `publicInputs` BOCs consumed by
+`src/ton-transaction.js`. A public service must deploy the same adapter from a
+fixed source revision; deploying the upstream gateway wire format directly is
+not supported.
 
 ## Indexer responsibility
 
@@ -71,6 +85,11 @@ GET /v1/launches
 The client rejects malformed records and renders no fixtures when a reviewed
 testnet indexer is unavailable. This endpoint is discovery-only; purchase
 confirmation must use the transaction fields described above.
+
+The local indexer under `services/local-indexer.mjs` is a read-through proxy,
+not a fixture server. Without `PRIVA_INDEXER_UPSTREAM` it returns `503` for
+launch data. When configured, it validates the response and requires every
+launch to match `PRIVA_LAUNCHPAD_ADDRESS` before forwarding it to the UI.
 
 ## Security boundaries
 

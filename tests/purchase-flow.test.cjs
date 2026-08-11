@@ -2,7 +2,7 @@ const assert = require('assert');
 
 async function runPurchaseFlowTests() {
   const { beginCell } = await import('@ton/core');
-  const { calculatePurchaseValue, prepareTestnetPurchase } = await import('../src/purchase-flow.js');
+  const { calculatePurchaseValue, createClientNonce, prepareTestnetPurchase } = await import('../src/purchase-flow.js');
   const address = 'EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c';
   const deployment = { mode: 'testnet', launchpadAddress: address, gatewayUrl: 'https://gateway.example.test' };
   const launch = {
@@ -16,6 +16,14 @@ async function runPurchaseFlowTests() {
   const quote = calculatePurchaseValue({ launch, saleUnits: '10' });
   assert.equal(quote.maxValue, 850000000n);
   assert.equal(quote.value, 855000000n);
+  let nonceAttempts = 0;
+  const safeNonce = createClientNonce((bytes) => {
+    nonceAttempts += 1;
+    bytes.fill(0);
+    if (nonceAttempts > 1) bytes[31] = 1;
+  });
+  assert.equal(safeNonce, `${'0'.repeat(63)}1`);
+  assert.equal(nonceAttempts, 2);
   assert.throws(() => calculatePurchaseValue({ launch, saleUnits: '1001' }), /remaining supply/);
   const empty = beginCell().endCell();
   const proof = beginCell().storeRef(empty).storeRef(empty).storeRef(empty).endCell().toBoc({ idx: false }).toString('base64');

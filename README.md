@@ -44,6 +44,9 @@ The [operations and incident-response guide](docs/OPERATIONS_AND_INCIDENT_RESPON
 defines the service and monitoring controls needed before any live deployment.
 The executable [release-readiness gate](docs/RELEASE_READINESS.md) is expected
 to block until reviewed deployment and assurance evidence is present.
+The loopback-only [local service boundary](services/README.md) provides a real
+proof adapter and a no-fixture indexer proxy for development; it is not a
+public endpoint or a substitute for live chain evidence.
 
 ## Repository structure
 
@@ -74,5 +77,20 @@ npm run build
 acton build
 acton test
 ```
+
+To exercise the service boundaries locally, provide the real gateway policy
+through your local secret manager and run:
+
+```bash
+npm run gateway:local
+npm run indexer:local
+npm run test:local-services
+```
+
+The gateway refuses to start without `PRIVA_GATEWAY_MODE=local`, binds only to
+loopback, and never prints the Telegram bot token or issuer secret. The indexer
+returns no launches until a real upstream is configured. The Pages workflow
+builds the app, TonConnect manifest, PNG icon, and public token metadata, but
+does not inject a reviewed deployment manifest or enable wallet actions.
 
 The default build intentionally has no deployment manifest. `npm test` runs the JavaScript boundaries and manifest fixtures; `npm run test:contracts`, `npm run test:real-verifier`, and `npm run test:real-lifecycle` cover the candidate contracts and emulator paths. These checks do not create a live address, replace an independent audit, or authorize a wallet broadcast.

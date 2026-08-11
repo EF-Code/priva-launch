@@ -4,6 +4,10 @@ import { buildTestnetBuyTransaction } from './ton-transaction.js';
 
 const decimal = /^(0|[1-9][0-9]*)$/;
 const MAX_COINS = 1n << 120n;
+// `clientNonce` is a public circuit field, not an arbitrary 256-bit blob.
+// Keep the browser-generated value canonical so the gateway does not have to
+// reduce or reinterpret a nonce after it has been bound into the proof.
+const BLS12_381_SCALAR_FIELD = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001n;
 
 function requireText(name, value) {
   if (typeof value !== 'string' || value.trim() === '') throw new TypeError(`${name} is required.`);
@@ -31,9 +35,12 @@ function unitsBigInt(value) {
 /** Generate a 32-byte request nonce; there is no insecure fallback. */
 export function createClientNonce(randomValues = globalThis.crypto?.getRandomValues?.bind(globalThis.crypto)) {
   if (typeof randomValues !== 'function') throw new Error('Secure browser randomness is required for a purchase nonce.');
-  const bytes = new Uint8Array(32);
-  randomValues(bytes);
-  return Array.from(bytes, (value) => value.toString(16).padStart(2, '0')).join('');
+  for (;;) {
+    const bytes = new Uint8Array(32);
+    randomValues(bytes);
+    const value = BigInt(`0x${Array.from(bytes, (item) => item.toString(16).padStart(2, '0')).join('')}`);
+    if (value > 0n && value < BLS12_381_SCALAR_FIELD) return value.toString(16).padStart(64, '0');
+  }
 }
 
 export function calculatePurchaseValue({ launch, saleUnits }) {
@@ -87,9 +94,10 @@ export async function prepareTestnetPurchase({
   const expiryEpoch = Number(authorization.expiryEpoch);
   if (!Number.isSafeInteger(expiryEpoch) || expiryEpoch <= nowEpoch) throw new Error('Gateway authorization has expired.');
   const validUntil = Math.min(expiryEpoch, nowEpoch + 300);
+  const queryId = BigInt(`0x${nonce.slice(0, 16)}`);
   const transaction = buildTestnetBuyTransaction({
     deployment: manifest,
-    queryId: BigInt(`0x${nonce.slice(0, 16)}`),
+    queryId,
     maxValue: quote.maxValue,
     recipient,
     proof: authorization.proof,
@@ -97,5 +105,5 @@ export async function prepareTestnetPurchase({
     value: quote.value,
     validUntil,
   });
-  return Object.freeze({ request, authorization, transaction, saleUnits: quote.units, maxValue: quote.maxValue, value: quote.value });
+  return Object.freeze({ request, authorization, transaction, queryId, saleUnits: quote.units, maxValue: quote.maxValue, value: quote.value });
 }
