@@ -1,9 +1,22 @@
 {
   "name": "TON token-contract reference",
-  "repository": "https://github.com/ton-blockchain/token-contract",
-  "revision": "1182ad99413242f09925d50e70ccb7e0e09f94d4",
+  "repository": "https://github.com/ton-blockchain/jetton-contract",
+  "revision": "d55f228edb0eb477cb4845d67e0dacc6489c6b57",
   "vendorPath": "vendor/ton-token-contract",
   "standard": "TEP-74",
   "status": "reference-only",
-  "notes": "Do not copy or deploy this source until its selected master/wallet variant, licensing, initialization parameters, and independent review are recorded in the reviewed testnet manifest."
+  "codeCellHashes": {
+    "minter": "f83d05490af7c9cc58019488c7b253c9492d49c25d12d09383e52e81537e343a",
+    "wallet": "ba2918c8947e9b25af9ac1b883357754173e5812f807a3d6e642a14709595395",
+    "walletLibrary": "8d28ea421b77e805fea52acf335296499f03aec8e9fd21ddb5f2564aa65c48de"
+  },
+  "opcodes": {
+    "mint": "0x642b7d07",
+    "internalTransfer": "0x178d4519",
+    "changeAdmin": "0x6501f354",
+    "claimAdmin": "0xfb88e119",
+    "dropAdmin": "0x7431f221",
+    "excesses": "0xd53276db"
+  },
+  "notes": "Do not copy or deploy this source until its selected master/wallet variant, licensing, initialization parameters, live code/data hashes, and independent review are recorded in the reviewed testnet manifest. The reference minter uses a two-stage change_admin/claim_admin transfer."
 }

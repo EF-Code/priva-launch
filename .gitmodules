@@ -3,4 +3,4 @@
 	url = https://github.com/EF-Code/zk-tele-auth.git
 [submodule "vendor/ton-token-contract"]
 	path = vendor/ton-token-contract
-	url = https://github.com/ton-blockchain/token-contract.git
+	url = https://github.com/ton-blockchain/jetton-contract.git
