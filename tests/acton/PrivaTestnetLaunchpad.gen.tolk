@@ -6,7 +6,9 @@
 import "@acton/build"
 import "@acton/emulation/network"
 import "@acton/testing/assert"
+import "@contracts/priva_testnet_launchpad"
 
+/// Storage `PrivaTestnetLaunchpadStorage` is defined in `@contracts/priva_testnet_launchpad`
 struct PrivaTestnetLaunchpad {
     address: address
     stateInit: ContractState? = null
@@ -14,11 +16,12 @@ struct PrivaTestnetLaunchpad {
 
 /// Creates a contract wrapper instance from the storage data
 fun PrivaTestnetLaunchpad.fromStorage(
+    storage: PrivaTestnetLaunchpadStorage,
     toShard: AddressShardingOptions? = null,
 ): PrivaTestnetLaunchpad {
     val stateInit = ContractState {
         code: build("priva_testnet_launchpad"),
-        data: createEmptyCell(),
+        data: storage.toCell(),
     };
     val address = AutoDeployAddress { stateInit, toShard }.calculateAddress();
     return PrivaTestnetLaunchpad { address, stateInit };
@@ -38,6 +41,70 @@ fun PrivaTestnetLaunchpad.deploy(self, from: address, config: SendParams = {}): 
         bounce: config.bounce,
         value: config.value,
         dest: { stateInit: self.stateInit },
+    });
+    return net.send(from, genericMsg);
+}
+
+fun PrivaTestnetLaunchpad.sendPrivaTestnetBuy(
+    self,
+    from: address,
+    queryId: uint64,
+    maxValue: coins,
+    recipient: address,
+    proof: cell,
+    publicInputs: cell,
+    config: SendParams = {},
+): SendResultList {
+    val genericMsg = createMessage({
+        bounce: config.bounce,
+        value: config.value,
+        dest: self.address,
+        body: PrivaTestnetBuy { queryId, maxValue, recipient, proof, publicInputs },
+    });
+    return net.send(from, genericMsg);
+}
+
+fun PrivaTestnetLaunchpad.sendPrivaRefundClaim(
+    self,
+    from: address,
+    queryId: uint64,
+    config: SendParams = {},
+): SendResultList {
+    val genericMsg = createMessage({
+        bounce: config.bounce,
+        value: config.value,
+        dest: self.address,
+        body: PrivaRefundClaim { queryId },
+    });
+    return net.send(from, genericMsg);
+}
+
+fun PrivaTestnetLaunchpad.sendPrivaJettonExcesses(
+    self,
+    from: address,
+    queryId: uint64,
+    config: SendParams = {},
+): SendResultList {
+    val genericMsg = createMessage({
+        bounce: config.bounce,
+        value: config.value,
+        dest: self.address,
+        body: PrivaJettonExcesses { queryId },
+    });
+    return net.send(from, genericMsg);
+}
+
+fun PrivaTestnetLaunchpad.sendPrivaClaimMinterAdmin(
+    self,
+    from: address,
+    queryId: uint64,
+    config: SendParams = {},
+): SendResultList {
+    val genericMsg = createMessage({
+        bounce: config.bounce,
+        value: config.value,
+        dest: self.address,
+        body: PrivaClaimMinterAdmin { queryId },
     });
     return net.send(from, genericMsg);
 }
