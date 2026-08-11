@@ -234,6 +234,7 @@ struct (0xd53276db) PrivaJettonExcesses {
 /// extension after its downstream wallet transfer has bounced.
 struct (0x50525646) PrivaMintFailure {
     queryId: uint64
+    jettonAmount: coins
 }
 
 /// Decode the exact 17-element public-input envelope checked by the pinned
@@ -470,7 +471,7 @@ fun makeRefundRecord(pending: PrivaPendingMint, refundNanoTon: coins, state: uin
 
 /// Release a pending reservation after a terminal mint failure. The action
 /// nullifier and query ID remain consumed, preventing proof or message replay.
-fun settleMintFailure(queryId: uint64, sender: address, returnedValue: coins) {
+fun settleMintFailure(queryId: uint64, sender: address, returnedValue: coins, callbackJettonAmount: coins) {
     var storage = PrivaTestnetLaunchpadStorage.load();
     val terms = storage.policy.load().saleTerms.load();
     assert (sender == terms.jettonMinter) throw PrivaTestnetLaunchpadErrors.UnauthorizedBounce;
@@ -482,6 +483,7 @@ fun settleMintFailure(queryId: uint64, sender: address, returnedValue: coins) {
     assert (pending.state == PENDING_MINT_STATE) throw PrivaTestnetLaunchpadErrors.UnknownPendingMint;
     val authorization = pending.authorization.load();
     val amounts = pending.amounts.load();
+    assert (callbackJettonAmount == amounts.rawJettonAmount) throw PrivaTestnetLaunchpadErrors.UnauthorizedBounce;
     val identityTotal = accounting.identityPurchaseTotals.mustGet(authorization.identityNullifier);
     assert (accounting.pendingSaleUnits >= pending.saleUnits) throw PrivaTestnetLaunchpadErrors.UnknownPendingMint;
     assert (accounting.pendingAcceptedNanoTon >= amounts.acceptedNanoTon) throw PrivaTestnetLaunchpadErrors.UnknownPendingMint;
@@ -622,7 +624,7 @@ fun onInternalMessage(inMsg: InMessage) {
             PrivaMintFailure => {
                 val messageTail = failure.forceLoadLazyObject();
                 if (!messageTail.isEmpty()) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
-                settleMintFailure(failure.queryId, inMsg.senderAddress, inMsg.valueCoins);
+                settleMintFailure(failure.queryId, inMsg.senderAddress, inMsg.valueCoins, failure.jettonAmount);
             }
             else => { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
         }
@@ -663,7 +665,17 @@ fun onBouncedMessage(inMsg: InMessageBounced) {
     if (opcode == TEP74_MINT_OPCODE) {
         if (body.remainingBitsCount() < 64) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
         val queryId = body.loadUint(64) as uint64;
-        settleMintFailure(queryId, inMsg.senderAddress, inMsg.valueCoins);
+        body.loadAddress();
+        body.loadCoins();
+        if (body.remainingRefsCount() != 1) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
+        val internalTransfer = body.loadRef();
+        var transfer = internalTransfer.beginParse();
+        if (transfer.remainingBitsCount() < 32 + 64) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
+        if (transfer.loadUint(32) != TEP74_INTERNAL_TRANSFER_OPCODE) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
+        transfer.loadUint(64);
+        val callbackJettonAmount = transfer.loadCoins();
+        if (transfer.remainingBitsCount() < 1) { throw PrivaTestnetLaunchpadErrors.MalformedMessage; }
+        settleMintFailure(queryId, inMsg.senderAddress, inMsg.valueCoins, callbackJettonAmount);
         return;
     }
     if (opcode == PRIVA_REFUND_TRANSFER_OPCODE) {

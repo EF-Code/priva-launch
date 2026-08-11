@@ -2,10 +2,10 @@
  * Real-proof controlled-testnet lifecycle evidence.
  *
  * This test deliberately uses the checked-in Acton launchpad build, the
- * official FunC jetton minter/wallet artifacts, and a real Groth16 proof. It
- * is a diagnostic gate, not deployment authorization: the official minter
- * has no terminal callback for a downstream wallet failure, so that path must
- * remain visibly pending and the deployment gate must stay closed.
+ * reviewed settlement-minter/wallet artifacts, and a real Groth16 proof. It
+ * is a diagnostic gate, not deployment authorization: live deployment still
+ * requires an independent review of the fork, code hash, gas reserve, and
+ * reviewed initialization manifest.
  */
 
 import assert from 'node:assert/strict';
@@ -156,10 +156,11 @@ class LaunchpadContract extends RawContract {
       .endCell(), value);
   }
 
-  async sendMintFailure(provider, via, queryId, value = toNano('0.1')) {
+  async sendMintFailure(provider, via, queryId, jettonAmount, value = toNano('0.1')) {
     return this.sendBody(provider, via, beginCell()
       .storeUint(MINT_FAILURE_OPCODE, 32)
       .storeUint(queryId, 64)
+      .storeCoins(jettonAmount)
       .endCell(), value);
   }
 
@@ -228,12 +229,13 @@ function splitProofMessage(message) {
 }
 
 async function loadArtifacts() {
-  const minter = readJson('vendor/ton-token-contract/build/JettonMinter.compiled.json');
+  const minter = readJson('build/priva_settlement_minter.json');
   const wallet = readJson('vendor/ton-token-contract/build/JettonWallet.compiled.json');
   return {
-    minterCode: cellFromHex(minter.hex),
+    minterCode: cellFromBase64(minter.codeBoc64),
     walletCode: cellFromHex(wallet.hex),
     walletLibrary: cellFromHex(wallet.libraryBoc),
+    minterArtifact: minter,
   };
 }
 
@@ -284,13 +286,15 @@ async function makeProof({ now, launchpad, recipient, clientNonce }) {
   };
 }
 
-async function setup({ claimAdmin }) {
+async function setup({ claimAdmin, withWalletLibrary = true }) {
   const artifacts = await loadArtifacts();
   const blockchain = await Blockchain.create();
   blockchain.now = Math.floor(Date.now() / 1000);
   const libs = Dictionary.empty(Dictionary.Keys.BigUint(256), Dictionary.Values.Cell());
   libs.set(BigInt(`0x${artifacts.walletCode.hash().toString('hex')}`), artifacts.walletCode);
-  blockchain.libs = beginCell().storeDictDirect(libs).endCell();
+  blockchain.libs = withWalletLibrary
+    ? beginCell().storeDictDirect(libs).endCell()
+    : beginCell().storeDict(null).endCell();
 
   const deployer = await blockchain.treasury(`priva-real-lifecycle-deployer-${claimAdmin ? 'success' : 'bounce'}`, { balance: toNano('100') });
   const buyer = await blockchain.treasury(`priva-real-lifecycle-buyer-${claimAdmin ? 'success' : 'bounce'}`, { balance: toNano('100') });
@@ -301,6 +305,7 @@ async function setup({ claimAdmin }) {
     .storeAddress(null)
     .storeRef(artifacts.walletLibrary)
     .storeRef(metadata)
+    .storeBit(0)
     .endCell();
   const minterInit = { code: artifacts.minterCode, data: minterData };
   const minterAddress = contractAddress(0, minterInit);
@@ -373,7 +378,7 @@ async function runSuccessLifecycle() {
   assert.equal(await launchpad.getQueryState(1001), 3, 'refund is marked sent before the outbound transfer');
   const duplicateRefund = await launchpad.sendRefundClaim(buyer.getSender(), 1001);
   assert.ok(duplicateRefund.transactions.some((tx) => tx.description?.computePhase?.exitCode === 925), 'duplicate refund claim must be rejected');
-  console.log('✓ real Groth16 proof -> official minter -> actual wallet -> authenticated excesses finalizes sale');
+  console.log('✓ real Groth16 proof -> settlement minter -> actual wallet -> authenticated excesses finalizes sale');
   console.log(`  launchpad=${launchpad.address} minter=${minter.address} wallet=${walletAddress}`);
   return scenario;
 }
@@ -391,7 +396,7 @@ async function runDirectBounceLifecycle() {
     proof.publicInputs,
     PRICE + REFUND_GAS_RESERVE + toNano('0.1'),
   );
-  assert.ok(result.transactions.some((tx) => tx.inMessageBounced || tx.description?.computePhase?.exitCode === 73), 'official minter should reject a mint from a non-admin launchpad');
+  assert.ok(result.transactions.some((tx) => tx.inMessageBounced || tx.description?.computePhase?.exitCode === 73), 'settlement minter should reject a mint from a non-admin launchpad');
   const accounting = await launchpad.getAccounting();
   assert.equal(accounting.soldSaleUnits, 0n);
   assert.equal(accounting.pendingSaleUnits, 0n, 'direct mint bounce releases the reservation');
@@ -401,8 +406,37 @@ async function runDirectBounceLifecycle() {
   const attacker = await blockchain.treasury('priva-real-lifecycle-refund-attacker', { balance: toNano('10') });
   const forgedRefund = await launchpad.sendRefundClaim(attacker.getSender(), 2002);
   assert.ok(forgedRefund.transactions.some((tx) => tx.description?.computePhase?.exitCode === 926), 'refund claims are sender-bound');
-  console.log('✓ real Groth16 proof -> official minter admin rejection -> authenticated direct-bounce refund path');
+  console.log('✓ real Groth16 proof -> settlement minter admin rejection -> authenticated direct-bounce refund path');
   return scenario;
+}
+
+async function runDownstreamBounceLifecycle() {
+  const scenario = await setup({ claimAdmin: true, withWalletLibrary: false });
+  const { blockchain, buyer, minter, launchpad } = scenario;
+  const proof = await makeProof({ now: blockchain.now, launchpad: launchpad.address, recipient: buyer.address, clientNonce: 4 });
+  const result = await launchpad.sendBuy(
+    buyer.getSender(),
+    4004,
+    PRICE,
+    buyer.address,
+    proof.proof,
+    proof.publicInputs,
+    PRICE + REFUND_GAS_RESERVE + toNano('0.1'),
+  );
+  const callbackDelivered = result.transactions.some((tx) => {
+    if (tx.address !== accountId(launchpad.address) || !tx.inMessage?.body) return false;
+    const body = tx.inMessage.body.beginParse();
+    return body.remainingBits >= 32 && body.preloadUint(32) === MINT_FAILURE_OPCODE;
+  });
+  assert.equal(callbackDelivered, true, 'missing wallet library must reach the launchpad callback');
+  const accounting = await launchpad.getAccounting();
+  assert.equal(accounting.soldSaleUnits, 0n);
+  assert.equal(accounting.pendingSaleUnits, 0n, 'downstream callback releases the reservation');
+  assert.equal(accounting.acceptedNanoTon, 0n);
+  assert.equal(accounting.pendingAcceptedNanoTon, 0n);
+  assert.equal(await launchpad.getQueryState(4004), 2, 'authenticated downstream callback creates a refund claim');
+  assert.equal((await minter.getJettonData()).totalSupply, 0n, 'supply rollback accompanies the callback');
+  console.log('✓ real Groth16 proof -> wallet bounce -> authenticated minter callback -> refund state');
 }
 
 async function runPolicyAndCallbackGuards() {
@@ -420,7 +454,7 @@ async function runPolicyAndCallbackGuards() {
     PRICE + REFUND_GAS_RESERVE + toNano('0.1'),
   );
   assert.ok(result.transactions.some((tx) => tx.description?.computePhase?.exitCode === 908), 'recipient binding must be enforced on-chain');
-  const forged = await launchpad.sendMintFailure(buyer.getSender(), 9999);
+  const forged = await launchpad.sendMintFailure(buyer.getSender(), 9999, RAW_JETTON_PER_UNIT);
   assert.ok(forged.transactions.some((tx) => tx.description?.computePhase?.exitCode === 924), 'forged terminal callback must be rejected');
   console.log('✓ real proof policy binding rejects recipient substitution and forged failure callback');
 }
@@ -428,16 +462,14 @@ async function runPolicyAndCallbackGuards() {
 async function main() {
   const success = await runSuccessLifecycle();
   await runDirectBounceLifecycle();
+  await runDownstreamBounceLifecycle();
   await runPolicyAndCallbackGuards();
-
-  // The official reference minter only rolls supply back on a downstream
-  // wallet bounce. It has no PRIVA_MINT_FAILURE callback, so the candidate
-  // cannot safely move this state to REFUND_PENDING without an extension.
-  // Keep this assertion explicit so a future minter change must update the
-  // test rather than silently weakening the deployment gate.
-  const minterSource = fs.readFileSync(path.join(root, 'vendor/ton-token-contract/contracts/jetton-minter.fc'), 'utf8');
-  assert.equal(minterSource.includes('0x50525646'), false);
-  console.log('BLOCKED: official minter has no terminal downstream-failure callback; public testnet deployment remains disabled');
+  const minterArtifact = readJson('build/priva_settlement_minter.json');
+  assert.equal(minterArtifact.callback.opcode, '0x50525646');
+  assert.equal(minterArtifact.callback.responseMustEqualAdmin, true);
+  assert.equal(minterArtifact.callback.upgradeDisabled, true);
+  console.log(`SETTLEMENT MINTER CANDIDATE: ${minterArtifact.codeCellHash}`);
+  console.log('DEPLOYMENT GATE: independent fork review, live testnet initialization evidence, and signed release approvals remain required');
   console.log(`Evidence candidate launchpad: ${success.launchpad.address}`);
 }
 

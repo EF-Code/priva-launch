@@ -1,0 +1,21 @@
+{
+  "contract": "priva_settlement_minter",
+  "source": "contracts/priva_settlement_minter.fc",
+  "sourceSha256": "28ae62c35e2e89e77ed4d2fda60ea78439d642d7a9711e2378915ecbd48846d8",
+  "upstream": {
+    "repository": "https://github.com/ton-blockchain/jetton-contract.git",
+    "revision": "d55f228edb0eb477cb4845d67e0dacc6489c6b57",
+    "source": "vendor/ton-token-contract/contracts/jetton-minter.fc",
+    "sourceSha256": "59c7b2e139a7489fa29919b27ccf41ed329f1481c709a444b40860b7af1ff5e5"
+  },
+  "compiler": "@ton-community/func-js@0.11.0",
+  "codeCellHash": "12735d631a291d42da0ea5895cf274f66af22d0c22f0229751296b3c818b5f5d",
+  "callback": {
+    "opcode": "0x50525646",
+    "body": "query_id:uint64 jetton_amount:Coins",
+    "destination": "locked admin address",
+    "standardBouncePrefix": "0xffffffff",
+    "richBouncePrefix": "0xfffffffe",
+    "upgrade": "disabled"
+  }
+}

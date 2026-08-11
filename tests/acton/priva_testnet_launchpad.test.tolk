@@ -84,7 +84,7 @@ get fun `test candidate rejects unauthenticated settlement callbacks`() {
         exitCode: 923,
     });
 
-    val forgedFailure = contract.sendPrivaMintFailure(deployer.address, 77, { value: ton("0.1") });
+    val forgedFailure = contract.sendPrivaMintFailure(deployer.address, 77, 1, { value: ton("0.1") });
     expect(forgedFailure).toHaveFailedTx({
         from: deployer.address,
         to: contract.address,

@@ -98,13 +98,14 @@ fun PrivaTestnetLaunchpad.sendPrivaMintFailure(
     self,
     from: address,
     queryId: uint64,
+    jettonAmount: coins,
     config: SendParams = {},
 ): SendResultList {
     val genericMsg = createMessage({
         bounce: config.bounce,
         value: config.value,
         dest: self.address,
-        body: PrivaMintFailure { queryId },
+        body: PrivaMintFailure { queryId, jettonAmount },
     });
     return net.send(from, genericMsg);
 }
