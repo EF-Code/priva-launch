@@ -38,7 +38,7 @@ jobs:
           mkdir -p dist/testnet/v1
           cp docs/testnet/v1/metadata.json dist/testnet/v1/metadata.json
           cp docs/testnet/v1/token.svg dist/testnet/v1/token.svg
-          convert public/icon.svg -resize 180x180 dist/icon-180.png
+          cp public/icon.svg dist/icon.svg
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
