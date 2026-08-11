@@ -1,6 +1,9 @@
 import { BondingCurveEngine } from './bonding-curve.js';
 import { deploymentConfig, getDeploymentStatus } from './deployment-config.js';
+import { PrivaGatewayClient } from './gateway-client.js';
 import { PrivaIndexerClient } from './indexer-client.js';
+import { calculatePurchaseValue, prepareTestnetPurchase } from './purchase-flow.js';
+import { telegramApp } from './telegram-app.js';
 import { createTestnetTonConnect } from './ton-connect.js';
 import { tonWallet } from './ton-wallet.js';
 
@@ -16,10 +19,14 @@ class LaunchpadUI {
     this.query = '';
     this.launches = deploymentConfig.mode === 'testnet' ? [] : fixtures;
     this.connectorPromise = null;
+    this.activeLaunch = null;
+    this.pendingPurchase = null;
+    this.purchaseBusy = false;
     tonWallet.setDeployment(deploymentConfig);
     this.dialog = document.querySelector('#readinessDialog');
     this.toast = document.querySelector('#toast');
     this.bind();
+    this.bindPurchaseDialog();
     this.render();
     void this.loadLaunches();
   }
@@ -38,6 +45,15 @@ class LaunchpadUI {
       button.textContent = isConnected ? `${address.slice(0, 6)}…${address.slice(-4)}` : 'Connect wallet';
       button.setAttribute('aria-label', isConnected ? `Connected wallet ${address}` : 'Connect wallet');
     });
+  }
+
+  bindPurchaseDialog() {
+    this.purchaseDialog = document.querySelector('#purchaseDialog');
+    this.purchaseForm = document.querySelector('#purchaseForm');
+    this.purchaseForm.addEventListener('submit', (event) => this.submitPurchase(event));
+    document.querySelectorAll('#purchaseCancel, #purchaseCancelAction').forEach((button) => button.addEventListener('click', () => this.closePurchase()));
+    document.querySelector('#purchaseUnits').addEventListener('input', () => this.updatePurchaseQuote());
+    this.purchaseDialog.addEventListener('cancel', () => this.resetPurchase());
   }
 
   async connectWallet() {
@@ -74,6 +90,95 @@ class LaunchpadUI {
     this.render();
   }
 
+  openPurchase(launch) {
+    if (deploymentConfig.mode !== 'testnet') {
+      this.notify('Read-only demo: no wallet transaction is available.');
+      return;
+    }
+    this.activeLaunch = launch;
+    this.pendingPurchase = null;
+    document.querySelector('#purchaseLaunchName').textContent = `${launch.name} ($${launch.symbol})`;
+    document.querySelector('#purchaseLaunchId').textContent = `Launch ${launch.id}`;
+    const units = document.querySelector('#purchaseUnits');
+    units.value = '1';
+    units.max = launch.remainingSaleUnits;
+    units.disabled = false;
+    document.querySelector('#purchaseStatus').textContent = 'Connect your testnet wallet, then request a Telegram-bound proof.';
+    const submit = document.querySelector('#purchaseSubmit');
+    submit.textContent = 'Request proof and review';
+    submit.disabled = false;
+    this.updatePurchaseQuote();
+    this.purchaseDialog.showModal();
+  }
+
+  resetPurchase() {
+    this.activeLaunch = null;
+    this.pendingPurchase = null;
+    this.purchaseBusy = false;
+    this.purchaseForm?.reset();
+  }
+
+  closePurchase() {
+    this.purchaseDialog.close();
+    this.resetPurchase();
+  }
+
+  updatePurchaseQuote() {
+    const quote = document.querySelector('#purchaseQuote');
+    const submit = document.querySelector('#purchaseSubmit');
+    if (!this.activeLaunch || this.pendingPurchase) return;
+    try {
+      const result = calculatePurchaseValue({ launch: this.activeLaunch, saleUnits: document.querySelector('#purchaseUnits').value });
+      quote.textContent = `${formatNanoTon(result.maxValue)} TON sale value + ${formatNanoTon(result.reserve)} TON refund reserve = ${formatNanoTon(result.value)} TON wallet request`;
+      submit.disabled = false;
+    } catch (error) {
+      quote.textContent = error instanceof Error ? error.message : String(error);
+      submit.disabled = true;
+    }
+  }
+
+  async submitPurchase(event) {
+    event.preventDefault();
+    if (this.purchaseBusy || !this.activeLaunch) return;
+    this.purchaseBusy = true;
+    const submit = document.querySelector('#purchaseSubmit');
+    const status = document.querySelector('#purchaseStatus');
+    try {
+      if (this.pendingPurchase) {
+        status.textContent = 'Opening the wallet for your explicit approval…';
+        submit.disabled = true;
+        await tonWallet.sendTransaction(this.pendingPurchase.transaction);
+        status.textContent = 'Wallet accepted the request. Wait for an independently indexed chain confirmation.';
+        this.notify('Transaction submitted; confirmation is not yet final.');
+        window.setTimeout(() => this.closePurchase(), 1600);
+        return;
+      }
+      if (!tonWallet.isConnected) throw new Error('Connect a testnet wallet before requesting a purchase.');
+      const initData = telegramApp.getInitDataString();
+      status.textContent = 'Requesting a fresh gateway proof…';
+      submit.disabled = true;
+      const prepared = await prepareTestnetPurchase({
+        deployment: deploymentConfig,
+        launch: this.activeLaunch,
+        saleUnits: document.querySelector('#purchaseUnits').value,
+        recipientAddress: tonWallet.walletAddress,
+        initData,
+        gatewayClient: new PrivaGatewayClient({ endpoint: deploymentConfig.gatewayUrl }),
+      });
+      this.pendingPurchase = prepared;
+      document.querySelector('#purchaseUnits').disabled = true;
+      document.querySelector('#purchaseQuote').textContent = `${formatNanoTon(prepared.maxValue)} TON sale value + reserve; recipient ${tonWallet.walletAddress}`;
+      status.textContent = 'Proof verified locally. Review the exact destination and amount, then approve in your wallet.';
+      submit.textContent = 'Approve in wallet';
+      submit.disabled = false;
+    } catch (error) {
+      status.textContent = error instanceof Error ? error.message : String(error);
+      submit.disabled = false;
+    } finally {
+      this.purchaseBusy = false;
+    }
+  }
+
   openReadiness(title) {
     if (title) document.querySelector('#dialogTitle').textContent = title;
     this.dialog.showModal();
@@ -104,9 +209,16 @@ class LaunchpadUI {
     const state = document.createElement('span'); state.className = `state ${launch.state}`; state.textContent = launch.state === 'closing' ? 'Closing soon' : 'Active'; top.append(mark, identity, state);
     const stats = document.createElement('div'); stats.className = 'launch-stats'; stats.innerHTML = `<span><b>${launch.raised.toFixed(1)} TON</b> raised</span><span><b>${launch.participants}</b> participants</span><span><b>${launch.ends}</b> remaining</span>`;
     const meter = document.createElement('div'); meter.className = 'meter'; const fill = document.createElement('i'); fill.style.width = `${progress}%`; meter.append(fill);
-    const foot = document.createElement('div'); foot.className = 'launch-foot'; const label = document.createElement('span'); label.textContent = `${progress}% to graduation`; const action = document.createElement('button'); action.className = 'button button-card'; action.type = 'button'; action.textContent = 'View launch'; action.addEventListener('click', () => this.notify(deploymentConfig.mode === 'testnet' ? 'Launch details are read-only until the purchase flow is reviewed.' : 'Read-only testnet preview: indexed launch data is not configured.')); foot.append(label, action);
+    const foot = document.createElement('div'); foot.className = 'launch-foot'; const label = document.createElement('span'); label.textContent = `${progress}% to graduation`; const action = document.createElement('button'); action.className = 'button button-card'; action.type = 'button'; action.textContent = deploymentConfig.mode === 'testnet' ? 'Review purchase' : 'View launch'; action.addEventListener('click', () => deploymentConfig.mode === 'testnet' ? this.openPurchase(launch) : this.notify('Read-only testnet preview: indexed launch data is not configured.')); foot.append(label, action);
     card.append(top, stats, meter, foot); return card;
   }
+}
+
+function formatNanoTon(value) {
+  const nano = typeof value === 'bigint' ? value : BigInt(value);
+  const whole = nano / 1000000000n;
+  const fraction = (nano % 1000000000n).toString().padStart(9, '0').replace(/0+$/, '');
+  return fraction ? `${whole}.${fraction}` : whole.toString();
 }
 
 new LaunchpadUI();

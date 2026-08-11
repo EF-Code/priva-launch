@@ -50,3 +50,14 @@ an RPC request as a transfer.
 configuration. A deployment host may inject a reviewed manifest through the
 build-time `__PRIVA_TESTNET_MANIFEST__` value; missing, malformed, or
 unreviewed values fall back to read-only mode.
+
+## Explicit purchase boundary
+
+When a reviewed testnet indexer is present, each launch record must include the
+manifest launchpad address, canonical decimal sale terms, and the fixed refund
+reserve. The UI opens a purchase dialog but does not submit from that dialog's
+first action. `src/purchase-flow.js` requests a fresh gateway proof using the
+Telegram-signed `initData`, binds the connected wallet address and launch ID,
+constructs one canonical message, and waits for a second explicit wallet
+approval. A successful TonConnect response is only “submitted”; final status
+must come from the independently indexed transaction.

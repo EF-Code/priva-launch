@@ -52,12 +52,17 @@ GET /v1/launches
   "launches": [
     {
       "id": "public-launch-id",
+      "launchpadAddress": "canonical TON address from the manifest",
       "name": "Example",
       "symbol": "EX",
       "state": "active | closing",
       "raisedTon": 12.5,
       "participants": 10,
-      "ends": "2h 14m"
+      "ends": "2h 14m",
+      "priceNanoTonPerSaleUnit": "85000000",
+      "remainingSaleUnits": "1000000000",
+      "refundGasReserveNanoTon": "5000000",
+      "mintMessageValueNanoTon": "50000000"
     }
   ]
 }

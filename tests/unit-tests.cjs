@@ -8,6 +8,7 @@ const { runTestnetLifecycleBoundaryTests } = require('./testnet-lifecycle-bounda
 const { runSettlementMinterBoundaryTests } = require('./settlement-minter-boundary.test.cjs');
 const { runTonTransactionTests } = require('./ton-transaction.test.cjs');
 const { runIndexerClientTests } = require('./indexer-client.test.cjs');
+const { runPurchaseFlowTests } = require('./purchase-flow.test.cjs');
 const { execFileSync } = require('child_process');
 const path = require('path');
 
@@ -42,7 +43,7 @@ function runTests() {
   execFileSync('node', ['scripts/check-testnet-manifest.cjs', 'tests/fixtures/testnet-manifest.valid.json'], { cwd: path.join(__dirname, '..'), stdio: 'inherit' });
   execFileSync('node', ['scripts/check-testnet-init-manifest.cjs', 'tests/fixtures/testnet-init.valid.json'], { cwd: path.join(__dirname, '..'), stdio: 'inherit' });
   execFileSync('node', ['scripts/compile-testnet-init.cjs', 'tests/fixtures/testnet-init.valid.json'], { cwd: path.join(__dirname, '..'), stdio: 'inherit' });
-  return runDeploymentConfigTests().then(runGatewayClientTests).then(runTonTransactionTests).then(runIndexerClientTests);
+  return runDeploymentConfigTests().then(runGatewayClientTests).then(runTonTransactionTests).then(runIndexerClientTests).then(runPurchaseFlowTests);
 
   console.log('\n🎉 All PrivaLaunch Unit Tests Passed Successfully!');
 }

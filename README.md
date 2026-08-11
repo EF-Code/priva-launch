@@ -11,6 +11,7 @@ Do not send TON to an address represented by this project. There are no live add
 ## What is here today
 
 - A Vite single-page interface with a fail-closed testnet manifest, TonConnect, gateway, and indexer boundaries.
+- An explicit two-step testnet purchase review: Telegram-signed gateway proof first, wallet approval second.
 - Illustrative bonding-curve calculations.
 - Candidate Tolk/Acton launchpad and settlement-minter contracts with emulator lifecycle tests.
 - JavaScript tests for pricing, manifest validation, gateway/indexer transport, canonical transaction encoding, and real-proof emulator paths.
