@@ -44,6 +44,29 @@ logical time, account address, decoded opcode/query ID, and decoder version.
 The UI compares a submitted request against these fields before displaying
 confirmation.
 
+The testnet discovery endpoint consumed by `src/indexer-client.js` is:
+
+```text
+GET /v1/launches
+{
+  "launches": [
+    {
+      "id": "public-launch-id",
+      "name": "Example",
+      "symbol": "EX",
+      "state": "active | closing",
+      "raisedTon": 12.5,
+      "participants": 10,
+      "ends": "2h 14m"
+    }
+  ]
+}
+```
+
+The client rejects malformed records and renders no fixtures when a reviewed
+testnet indexer is unavailable. This endpoint is discovery-only; purchase
+confirmation must use the transaction fields described above.
+
 ## Security boundaries
 
 - Gateway compromise can issue fraudulent credentials; it cannot alter a

@@ -1,13 +1,14 @@
 {
   "version": "testnet-1",
   "network": "testnet",
+  "status": "reviewed",
   "sourceRevision": "0123456789abcdef0123456789abcdef01234567",
-  "launchpadAddress": "EQTestnetLaunchpad",
-  "verifierAddress": "EQTestnetVerifier",
+  "launchpadAddress": "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c",
+  "verifierAddress": "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c",
   "gatewayUrl": "https://gateway.example.test",
   "indexerUrl": "https://indexer.example.test",
   "tonConnectManifestUrl": "https://app.example.test/tonconnect-manifest.json",
   "codeHashes": { "launchpad": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
   "circuit": { "version": 1, "verificationKeyHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" },
-  "dex": { "kind": "dedust-v2", "sourceRevision": "3aa071fb7f906e492c2fcc8f771812a3da0dfe78", "nativeVaultAddress": "EQTestnetNativeVault", "jettonVaultAddress": "EQTestnetJettonVault", "poolAddress": "EQTestnetPool", "codeHashes": { "nativeVault": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" } }
+  "dex": { "kind": "dedust-v2", "sourceRevision": "3aa071fb7f906e492c2fcc8f771812a3da0dfe78", "nativeVaultAddress": "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c", "jettonVaultAddress": "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c", "poolAddress": "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c", "codeHashes": { "nativeVault": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" } }
 }

@@ -40,7 +40,7 @@
       </section>
 
       <section class="shell launches" id="launches">
-        <div class="section-heading"><div><div class="eyebrow">TESTNET DISCOVERY</div><h2>Launches under observation</h2></div><p>These are interface fixtures until a reviewed indexer endpoint is declared in the deployment manifest.</p></div>
+        <div class="section-heading"><div><div class="eyebrow">TESTNET DISCOVERY</div><h2>Launches under observation</h2></div><p>Only records from the reviewed indexer are rendered. Without one, this section stays empty and read-only.</p></div>
         <div class="toolbar"><label class="search"><span>⌕</span><input id="searchInput" type="search" placeholder="Search name or ticker" autocomplete="off" /></label><div class="filters" role="group" aria-label="Launch filter"><button data-filter="all" class="selected">All</button><button data-filter="active">Active</button><button data-filter="closing">Closing soon</button></div></div>
         <div class="launch-grid" id="launchGrid" aria-live="polite"></div>
       </section>
@@ -50,7 +50,7 @@
         <ol><li><span>01</span><div><strong>Verify eligibility</strong><p>The gateway validates Telegram data and produces a policy-bound authorization.</p></div></li><li><span>02</span><div><strong>Review an exact quote</strong><p>Recipient, expiry, cap and max value are visible before wallet approval.</p></div></li><li><span>03</span><div><strong>Confirm independently</strong><p>Priva matches the finalized transaction to its decoded query ID and destination.</p></div></li></ol>
       </section>
     </main>
-    <footer class="shell footer"><a class="wordmark" href="#top"><span>p</span>priva</a><p>Testnet preview. No tokens, proofs, or wallet transactions are available from this build.</p><a href="docs/PROTOCOL_SPEC.md">Protocol specification ↗</a></footer>
+    <footer class="shell footer"><a class="wordmark" href="#top"><span>p</span>priva</a><p>Testnet preview. Wallet actions require a reviewed manifest and explicit user approval.</p><a href="docs/PROTOCOL_SPEC.md">Protocol specification ↗</a></footer>
 
     <dialog id="readinessDialog"><form method="dialog"><button class="dialog-close" aria-label="Close">×</button><div class="eyebrow">TESTNET ENABLEMENT</div><h2 id="dialogTitle">Deployment manifest required</h2><p id="dialogText">The UI will remain read-only until a signed, reviewed testnet manifest declares the launchpad, verifier, gateway, indexer, code hashes, and TonConnect origin.</p><div class="checklist"><div><i>✓</i> No user-provided addresses</div><div><i>✓</i> No optimistic balance changes</div><div><i>✓</i> No automatic transaction submission</div></div><button class="button button-primary">Understood</button></form></dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>

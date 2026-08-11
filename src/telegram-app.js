@@ -29,12 +29,13 @@ export class TelegramAppIntegration {
   }
 
   /**
-   * Extract raw Telegram initData or fallback mock for desktop testing
+   * Extract raw, Telegram-signed initData. Desktop/demo builds must not invent
+   * a fallback because a forged local value could be mistaken for identity.
    * @returns {string}
    */
   getInitDataString() {
     if (this.initData) return this.initData;
-    return 'auth_date=1620000000&user=%7B%22id%22%3A987654321%2C%22is_premium%22%3Atrue%7D&hash=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+    throw new Error('Telegram-signed initData is unavailable outside Telegram.');
   }
 }
 

@@ -2,25 +2,25 @@
 
 > Demo-only interface prototype for a proposed privacy-preserving TON token launchpad.
 
-## Status: not safe for deployment or real funds
+## Status: fail-closed testnet integration; not deployed
 
-This repository is an early product and contract prototype. It is **not a live TON launchpad**. It does not connect a real wallet, submit signed transactions, verify Telegram identity, generate or verify zero-knowledge proofs, enforce purchase limits on-chain, mint a standards-compliant jetton, or migrate liquidity to DeDust.
+This repository is an early product and contract prototype. It is **not a live TON launchpad**. The shipped build has no reviewed deployment manifest, so it stays in demo/read-only mode and cannot connect a wallet or submit a transaction. When a real reviewed testnet manifest is injected, the UI can lazily open TonConnect and construct one canonical testnet purchase request; it still does not turn unreviewed contracts, gateway responses, or browser state into authorization.
 
-Do not send TON to an address represented by this project. The UI contains simulated tokens, balances, trades, wallet selections, charts, and transaction identifiers for product exploration only.
+Do not send TON to an address represented by this project. There are no live addresses, signed release approvals, or chain transaction traces in this repository. Demo mode contains simulated launch cards for product exploration only; testnet mode renders no fixtures when its reviewed indexer is unavailable.
 
 ## What is here today
 
-- A Vite single-page interface that demonstrates a possible launchpad flow.
+- A Vite single-page interface with a fail-closed testnet manifest, TonConnect, gateway, and indexer boundaries.
 - Illustrative bonding-curve calculations.
-- Incomplete Tolk contract sketches for a launchpad and jetton components.
-- Minimal JavaScript tests for the pricing helpers.
+- Candidate Tolk/Acton launchpad and settlement-minter contracts with emulator lifecycle tests.
+- JavaScript tests for pricing, manifest validation, gateway/indexer transport, canonical transaction encoding, and real-proof emulator paths.
 
 ## What must exist before a mainnet launch
 
 1. A written protocol specification covering pricing, fees, refunds, migration, privileged roles, and failure paths.
 2. Cryptographically verified Telegram authentication and a real, replay-resistant ZK/nullifier design.
 3. Complete on-chain enforcement of pricing, cumulative allocations, minting, transfers, accounting, and migration.
-4. Authentic TonConnect integration with canonical contract addresses and confirmation tracking.
+4. Authentic TonConnect integration with canonical contract addresses and independently indexed confirmation tracking.
 5. Full Acton/Tolk compilation and integration testing, fuzz/property testing, testnet validation, and an independent security audit.
 6. Transparent deployment parameters, controlled administrative authority, monitoring, and incident procedures.
 
@@ -74,4 +74,4 @@ acton build
 acton test
 ```
 
-`npm test` currently tests only the JavaScript bonding-curve helper. `npm run compile-contracts` is a placeholder validation script; it does not produce contract artifacts. The obsolete generated wrappers were removed; native message-level Acton tests must be added with the real implementation before any contract can receive value.
+The default build intentionally has no deployment manifest. `npm test` runs the JavaScript boundaries and manifest fixtures; `npm run test:contracts`, `npm run test:real-verifier`, and `npm run test:real-lifecycle` cover the candidate contracts and emulator paths. These checks do not create a live address, replace an independent audit, or authorize a wallet broadcast.
