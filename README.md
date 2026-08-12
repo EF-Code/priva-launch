@@ -13,7 +13,10 @@ launchpad and settlement-minter addresses in
 but it still has no reviewed runtime manifest or public gateway/indexer. Demo mode
 contains simulated launch cards for product exploration only; testnet mode renders
 no fixtures when its reviewed indexer is unavailable. A solo-owner testnet
-attestation is self-attestation rather than an independent audit.
+attestation is self-attestation rather than an independent audit. The safe
+initial testnet profile is a fixed-price sale with DEX migration explicitly
+disabled; the DeDust factory and adapter remain fail-closed until their own
+implementation and chain evidence exist.
 
 ## What is here today
 
