@@ -186,7 +186,7 @@ function splitProofMessage(message) {
   if (payload.loadUint(32) !== GROTH16_TOLK_MESSAGE_OP) throw new Error('Unexpected Groth16 message opcode.');
   const proof = payload.loadRef();
   const publicInputs = payload.loadRef();
-  payload.assertEnd();
+  payload.endParse();
   if (proof.bits.length !== 0 || proof.refs.length !== 3) throw new Error('Generated proof cell has an invalid shape.');
   if (publicInputs.bits.length === 0 && publicInputs.refs.length === 0) throw new Error('Generated public-input cell is empty.');
   return { proof, publicInputs };
