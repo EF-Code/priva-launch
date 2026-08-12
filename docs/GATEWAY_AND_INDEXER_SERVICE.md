@@ -89,7 +89,13 @@ confirmation must use the transaction fields described above.
 The local indexer under `services/local-indexer.mjs` is a read-through proxy,
 not a fixture server. Without `PRIVA_INDEXER_UPSTREAM` it returns `503` for
 launch data. When configured, it validates the response and requires every
-launch to match `PRIVA_LAUNCHPAD_ADDRESS` before forwarding it to the UI.
+launch to match `PRIVA_LAUNCHPAD_ADDRESS` before forwarding it to the UI. In
+the explicit Render testnet profile it also reads
+`getPrivaTestnetAccounting` from the configured public TON Center-compatible
+chain API and replaces the upstream's raised amount and remaining sale units
+with current on-chain values. The upstream still owns labels, participant
+counts, and transaction confirmation records; a health check does not certify
+those records.
 
 ## Security boundaries
 

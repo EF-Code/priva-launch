@@ -37,7 +37,10 @@ remove the need for an independently operated indexer.
    usable. It must expose `/healthz`, `/v1/launches`, and the purchase lookup
    paths described in [the service contract](GATEWAY_AND_INDEXER_SERVICE.md),
    and must derive records from confirmed TON transactions rather than from
-   browser input.
+   browser input. The Render proxy additionally reads the deployed launchpad's
+   accounting getter from `PRIVA_CHAIN_API` (defaulting to TON Center testnet)
+   so raised value and remaining sale units are checked against current chain
+   state.
 5. Record the two generated `https://*.onrender.com` service URLs. Do not put
    them in a runtime manifest until `GET /healthz` and the required API paths
    have been checked from the public internet.

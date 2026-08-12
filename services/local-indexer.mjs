@@ -55,7 +55,9 @@ function loadConfig() {
     try { origin = new URL(corsOrigin); } catch { throw new Error('PRIVA_CORS_ORIGIN must be an absolute HTTPS origin.'); }
     if (origin.protocol !== 'https:' || origin.pathname !== '/' || origin.search || origin.hash) throw new Error('Render indexer CORS origin must be an HTTPS origin without a path.');
   }
-  return Object.freeze({ mode, host, port, corsOrigin, upstream, launchpadRaw });
+  const chainApi = process.env.PRIVA_CHAIN_API?.trim() || 'https://testnet.toncenter.com/api/v3';
+  if (publicMode && !/^https:\/\//.test(chainApi)) throw new Error('Render indexer PRIVA_CHAIN_API must use HTTPS.');
+  return Object.freeze({ mode, host, port, corsOrigin, upstream, launchpadRaw, chainApi });
 }
 
 function jsonResponse(response, status, payload) {
@@ -82,6 +84,29 @@ function safeNumber(value) {
 
 function validDecimal(value, { nonZero = false } = {}) {
   return typeof value === 'string' && /^(0|[1-9][0-9]*)$/.test(value) && (!nonZero || value !== '0');
+}
+
+function asDecimal(value) {
+  if (typeof value === 'string' && /^0x[0-9a-f]+$/i.test(value)) return BigInt(value).toString(10);
+  if (typeof value === 'number' && Number.isSafeInteger(value) && value >= 0) return String(value);
+  return null;
+}
+
+async function readLaunchpadAccounting(config) {
+  if (!config.chainApi) return null;
+  const response = await fetch(`${config.chainApi}/runGetMethod`, {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ address: config.launchpadRaw, method: 'getPrivaTestnetAccounting', stack: [] }),
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!response.ok) throw Object.assign(new Error(`chain API returned ${response.status}`), { statusCode: 502 });
+  const body = await response.json();
+  const stack = body?.stack || body?.result?.stack;
+  if (!Array.isArray(stack) || stack.length !== 4) throw Object.assign(new Error('chain API returned an invalid launchpad accounting stack'), { statusCode: 502 });
+  const values = stack.map((entry) => asDecimal(entry?.value ?? entry?.[1]));
+  if (values.some((value) => value === null)) throw Object.assign(new Error('chain API returned a non-numeric launchpad accounting value'), { statusCode: 502 });
+  return { soldSaleUnits: values[0], pendingSaleUnits: values[1], acceptedNanoTon: values[2], pendingAcceptedNanoTon: values[3] };
 }
 
 function validateLaunches(body, config) {
@@ -137,7 +162,18 @@ export function createLocalIndexerServer(config) {
     try {
       if (request.url === '/v1/launches') {
         const body = await upstreamJson(config, '/v1/launches');
-        jsonResponse(response, 200, { launches: validateLaunches(body, config) });
+        const launches = validateLaunches(body, config);
+        const accounting = await readLaunchpadAccounting(config);
+        if (accounting && launches.length === 1) {
+          const launch = { ...launches[0] };
+          launch.raisedTon = Number(accounting.acceptedNanoTon) / 1_000_000_000;
+          const remainingSaleUnits = BigInt(launch.remainingSaleUnits) - BigInt(accounting.soldSaleUnits) - BigInt(accounting.pendingSaleUnits);
+          if (remainingSaleUnits < 0n) throw Object.assign(new Error('chain accounting exceeds the upstream sale allocation'), { statusCode: 502 });
+          launch.remainingSaleUnits = remainingSaleUnits.toString();
+          jsonResponse(response, 200, { launches: [launch] });
+          return;
+        }
+        jsonResponse(response, 200, { launches });
         return;
       }
       const match = request.url?.match(/^\/v1\/purchases\/([0-9]+)$/);
