@@ -51,7 +51,8 @@
   "license": "MIT",
   "dependencies": {
     "@ton/core": "^0.63.1",
-    "@tonconnect/ui": "^3.0.2"
+    "@tonconnect/ui": "^3.0.2",
+    "buffer": "^6.0.3"
   },
   "devDependencies": {
     "vite": "^5.2.0"

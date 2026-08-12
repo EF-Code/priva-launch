@@ -1,3 +1,4 @@
+import './browser-runtime.js';
 import { Address, beginCell, Cell } from '@ton/core';
 import { requireTestnetDeployment } from './deployment-config.js';
 
