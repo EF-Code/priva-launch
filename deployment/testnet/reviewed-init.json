@@ -1,0 +1,43 @@
+{
+  "network": "testnet",
+  "status": "reviewed",
+  "sourceRevision": "0511c5e910f1a9bb66493fa73961c68f2ca310b2",
+  "launchpadCodeSha256": "0b00311a28f6955de08cd67a75edeaf04f44db5f27a29a810ce63da69343d587",
+  "settlementMinterCodeSha256": "12735d631a291d42da0ea5895cf274f66af22d0c22f0229751296b3c818b5f5d",
+  "settlementMinterWalletCodeSha256": "8d28ea421b77e805fea52acf335296499f03aec8e9fd21ddb5f2564aa65c48de",
+  "settlementMinterUpstreamRevision": "d55f228edb0eb477cb4845d67e0dacc6489c6b57",
+  "settlementMinterCallbackOpcode": "0x50525646",
+  "initialDataCellHash": "edf0d417696eb274e362a589a077eeba9ef9d095d85821138d2824d640073a78",
+  "circuit": {
+    "version": 1,
+    "verificationKeySha256": "bde50de738c19ff675d19d09e611aae50247e1658df798b520313acc076466ae"
+  },
+  "review": {
+    "mode": "solo-owner-attested",
+    "owner": "ef-code",
+    "role": "release-owner",
+    "sourceRevision": "0511c5e910f1a9bb66493fa73961c68f2ca310b2",
+    "decision": "approved-for-testnet-only",
+    "attestedAt": "2026-08-12T11:32:43Z",
+    "statement": "I reviewed this exact testnet initialization record and its pinned artifact hashes for testnet-only use."
+  },
+  "policy": {
+    "appDomainHash": "35158561066375179817939987518076432195770699254656776662557974205216647850095",
+    "issuerKeyHash": "50636837536696456795595688125714772313830612817200961362892710087645058817405",
+    "launchIdHash": "46505882029547571939383076889677913189313818884419477552141134741432015811741",
+    "maxTokenAgeSec": "3600",
+    "maxClockSkewSec": "300",
+    "maxAuthorizationTtlSec": "300",
+    "requirePremium": false,
+    "saleTerms": {
+      "jettonMinter": "kQCXHjN-EPS1D9k9TF7VlmRhWShBEXeRVKbuMz32zy8rKSb1",
+      "priceNanoTonPerSaleUnit": "85",
+      "totalSaleUnits": "1000000000",
+      "rawJettonPerSaleUnit": "1000000000",
+      "identityCapNanoTon": "4250000000",
+      "walletFundingNanoTon": "50000000",
+      "mintMessageValueNanoTon": "200000000",
+      "refundGasReserveNanoTon": "50000000"
+    }
+  }
+}

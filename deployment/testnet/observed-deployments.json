@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "network": "testnet",
+  "status": "observed-testnet",
+  "sourceRevision": "0511c5e910f1a9bb66493fa73961c68f2ca310b2",
+  "observedAt": "2026-08-12T11:28:43Z",
+  "metadata": {
+    "url": "https://ef-code.github.io/priva-launch/testnet/v1/metadata.json",
+    "sha256": "e0c4409d35ba05df5d9b6845a6ad02cc7bf851ca659fa2367834d5739ed9c381"
+  },
+  "settlementMinter": {
+    "address": "kQCXHjN-EPS1D9k9TF7VlmRhWShBEXeRVKbuMz32zy8rKSb1",
+    "rawAddress": "0:971e337e10f4b50fd93d4c5ed596646159284111779154a6ee333df6cf2f2b29",
+    "initialAdminAddress": "kQDPUr6rb5cCqZFv0iHNCX5dJX3_De_zJrKO7Xlr17QWGHuK",
+    "deploymentValueNanoTon": "300000000",
+    "broadcastTransactionHash": "6985c055f97f7736b0c9717412b6cb76b1cf564feb875ed76963fbcc250ed1b4",
+    "accountTransactionHash": "e71b21437c1869670f1ece29486d1139125e803e3218958c418a3740ab094769",
+    "accountTransactionLt": "89367303000003",
+    "codeCellHash": "12735d631a291d42da0ea5895cf274f66af22d0c22f0229751296b3c818b5f5d",
+    "dataCellHash": "36a695a59dedd374eee13f19c57fbd1895067a81bb2ce5fd02e1803ba8cef350",
+    "walletLibraryCellHash": "8d28ea421b77e805fea52acf335296499f03aec8e9fd21ddb5f2564aa65c48de",
+    "state": "active",
+    "explorerUrl": "https://testnet.tonscan.org/tx/6985c055f97f7736b0c9717412b6cb76b1cf564feb875ed76963fbcc250ed1b4"
+  },
+  "launchpad": {
+    "address": "kQBjcIMOEWAKW11x17u7RpiLuJLJft7x5L4-A6I4pEdGa7zq",
+    "rawAddress": "0:6370830e11600a5b5d71d7bbbb46988bb892c97edef1e4be3e03a238a447466b",
+    "deploymentValueNanoTon": "1000000000",
+    "broadcastTransactionHash": "5aa8ed02a640a1abc9d4813fb155d88718d0a805f7fa4376eefc3b42da7fff28",
+    "accountTransactionHash": "138b8f54957d7d3846898e766b94b9403149e1e218c9b9e2536d4428f738fa9e",
+    "accountTransactionLt": "89368324000003",
+    "codeCellHash": "0b00311a28f6955de08cd67a75edeaf04f44db5f27a29a810ce63da69343d587",
+    "dataCellHash": "edf0d417696eb274e362a589a077eeba9ef9d095d85821138d2824d640073a78",
+    "initialDataCellHash": "edf0d417696eb274e362a589a077eeba9ef9d095d85821138d2824d640073a78",
+    "policyCellHash": "894ea5e877e2b92c680e5812b816c723b9f18cf3849ef8184e87bcc087b08f7b",
+    "saleTermsCellHash": "4df73e45e27379bf0706d3abb3492576ca2c4df2058fdc1a23b4963aeb4b798b",
+    "settlementTermsCellHash": "91e2b4683d516d110fd836841db739922c600ff6879ce093dde634c871f0da0e",
+    "state": "active",
+    "explorerUrl": "https://testnet.tonscan.org/tx/5aa8ed02a640a1abc9d4813fb155d88718d0a805f7fa4376eefc3b42da7fff28"
+  },
+  "verification": {
+    "provider": "https://testnet.toncenter.com/api/v2/getAddressInformation",
+    "checked": [
+      "0:971e337e10f4b50fd93d4c5ed596646159284111779154a6ee333df6cf2f2b29",
+      "0:6370830e11600a5b5d71d7bbbb46988bb892c97edef1e4be3e03a238a447466b"
+    ],
+    "note": "Read-only account-state verification; this record is not the runtime manifest and does not authorize mainnet."
+  }
+}

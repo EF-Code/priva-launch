@@ -37,6 +37,12 @@ source revision, and use canonical friendly TON addresses (`EQ`, `UQ`, `kQ`, or
 `0Q`) for every launchpad, verifier, and DeDust account. The UI rejects an
 otherwise-shaped object before it can open TonConnect.
 
+`observed-deployments.json` records the two actual testnet deployments and
+read-only post-deploy code/data-hash checks. Its `observed-testnet` status is
+deliberate: it is chain evidence, not a substitute for the runtime manifest.
+The verifier endpoint, public gateway/indexer, and DEX addresses remain
+unfilled until those services and contracts exist.
+
 Validate a supplied manifest with `npm run check:testnet-manifest --
 deployment/testnet/reviewed-manifest.json`. The command checks shape and public
 integrity only; it does not certify an address, operator, or audit.
