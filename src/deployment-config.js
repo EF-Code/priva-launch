@@ -12,8 +12,10 @@ const demoDeploymentConfig = Object.freeze({
   sourceRevision: null,
   launchpadAddress: null,
   verifierAddress: null,
+  jettonMinterAddress: null,
   gatewayUrl: null,
   indexerUrl: null,
+  metadataUrl: null,
   jettonMasterCodeHash: null,
   tonConnectManifestUrl: null,
   manifestError: null,
@@ -29,11 +31,11 @@ export function parseTestnetManifest(manifest) {
   if (manifest.network !== 'testnet') throw new Error('Only a reviewed testnet manifest may enable this interface.');
   if (manifest.status !== 'reviewed') throw new Error('Deployment manifest must have status "reviewed".');
   if (!revision.test(manifest.sourceRevision || '')) throw new Error('Deployment manifest sourceRevision must be a full Git SHA.');
-  for (const field of ['version', 'launchpadAddress', 'verifierAddress', 'gatewayUrl', 'indexerUrl', 'tonConnectManifestUrl']) {
+  for (const field of ['version', 'launchpadAddress', 'verifierAddress', 'jettonMinterAddress', 'gatewayUrl', 'indexerUrl', 'tonConnectManifestUrl', 'metadataUrl']) {
     if (typeof manifest[field] !== 'string' || manifest[field].trim() === '') throw new Error(`Deployment manifest is missing ${field}.`);
   }
-  for (const field of ['launchpadAddress', 'verifierAddress']) if (!tonAddress.test(manifest[field])) throw new Error(`Deployment manifest ${field} must be a friendly TON address.`);
-  for (const endpoint of ['gatewayUrl', 'indexerUrl', 'tonConnectManifestUrl']) {
+  for (const field of ['launchpadAddress', 'verifierAddress', 'jettonMinterAddress']) if (!tonAddress.test(manifest[field])) throw new Error(`Deployment manifest ${field} must be a friendly TON address.`);
+  for (const endpoint of ['gatewayUrl', 'indexerUrl', 'tonConnectManifestUrl', 'metadataUrl']) {
     let url;
     try { url = new URL(manifest[endpoint]); } catch { throw new Error(`Deployment manifest ${endpoint} must be an HTTPS URL.`); }
     if (url.protocol !== 'https:') throw new Error(`Deployment manifest ${endpoint} must be an HTTPS URL.`);

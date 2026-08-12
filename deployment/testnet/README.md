@@ -24,10 +24,11 @@ Before creating that manifest, the team must provide:
 
 1. a compiled and lifecycle-tested launchpad, factory, adapter, and inlined
    verifier implementation;
-2. exact testnet deployment addresses and SHA-256 code hashes;
+2. exact testnet launchpad, verifier, and jetton-minter deployment addresses and SHA-256 code hashes;
 3. a TLS gateway and indexer controlled by the testnet operator;
-4. a public TonConnect manifest URL bound to the testnet UI origin; and
-5. the circuit verification-key hash used by the deployed verifier.
+4. a public TonConnect manifest URL bound to the testnet UI origin;
+5. the HTTPS token metadata URL and its digest;
+6. the circuit verification-key hash used by the deployed verifier.
 6. the DeDust native vault, jetton vault, and pool addresses plus their code
    hashes, pinned to the reviewed DeDust SDK/source revision.
 
@@ -39,6 +40,29 @@ otherwise-shaped object before it can open TonConnect.
 Validate a supplied manifest with `npm run check:testnet-manifest --
 deployment/testnet/reviewed-manifest.json`. The command checks shape and public
 integrity only; it does not certify an address, operator, or audit.
+
+After the gateway, indexer, metadata, and TonConnect assets are hosted, run
+the read-only public dependency check:
+
+```bash
+npm run check:testnet-endpoints -- deployment/testnet/reviewed-manifest.json
+```
+
+It requires public HTTPS, rejects loopback/private hosts, checks the manifest
+and PNG/ICO icon, validates token metadata, and requires both service health
+endpoints to return JSON `200` responses.
+
+The main application remains read-only unless the reviewed manifest is supplied
+to the build. Once the real manifest exists, run:
+
+```bash
+npm run build:testnet
+```
+
+That command validates `deployment/testnet/reviewed-manifest.json` before
+injecting it into the bundle. A normal `npm run build` deliberately injects no
+manifest. The Pages workflow follows the same rule: it enables the reviewed
+manifest only when that exact file exists and passes validation.
 
 Before any StateInit is built, validate its separate reviewed initialization
 record with `npm run check:testnet-init -- deployment/testnet/reviewed-init.json`.

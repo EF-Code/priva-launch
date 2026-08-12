@@ -3,7 +3,7 @@
   "title": "Priva reviewed testnet deployment manifest",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "network", "status", "sourceRevision", "launchpadAddress", "verifierAddress", "gatewayUrl", "indexerUrl", "tonConnectManifestUrl", "codeHashes", "circuit", "dex"],
+  "required": ["version", "network", "status", "sourceRevision", "launchpadAddress", "verifierAddress", "jettonMinterAddress", "gatewayUrl", "indexerUrl", "tonConnectManifestUrl", "metadataUrl", "codeHashes", "circuit", "dex"],
   "properties": {
     "version": { "type": "string", "minLength": 1 },
     "network": { "const": "testnet" },
@@ -11,9 +11,11 @@
     "sourceRevision": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
     "launchpadAddress": { "type": "string", "pattern": "^(?:EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$" },
     "verifierAddress": { "type": "string", "pattern": "^(?:EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$" },
+    "jettonMinterAddress": { "type": "string", "pattern": "^(?:EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$" },
     "gatewayUrl": { "type": "string", "pattern": "^https://" },
     "indexerUrl": { "type": "string", "pattern": "^https://" },
     "tonConnectManifestUrl": { "type": "string", "pattern": "^https://" },
+    "metadataUrl": { "type": "string", "pattern": "^https://" },
     "codeHashes": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{64}$" } },
     "circuit": { "type": "object", "additionalProperties": false, "required": ["version", "verificationKeyHash"], "properties": { "version": { "const": 1 }, "verificationKeyHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" } } },
     "dex": { "type": "object", "additionalProperties": false, "required": ["kind", "sourceRevision", "nativeVaultAddress", "jettonVaultAddress", "poolAddress", "codeHashes"], "properties": { "kind": { "const": "dedust-v2" }, "sourceRevision": { "type": "string", "pattern": "^[a-f0-9]{40}$" }, "nativeVaultAddress": { "type": "string", "pattern": "^(?:EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$" }, "jettonVaultAddress": { "type": "string", "pattern": "^(?:EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$" }, "poolAddress": { "type": "string", "pattern": "^(?:EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$" }, "codeHashes": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{64}$" } } } }

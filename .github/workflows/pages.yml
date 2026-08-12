@@ -29,6 +29,12 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      - name: Validate reviewed testnet manifest when present
+        run: |
+          if [ -f deployment/testnet/reviewed-manifest.json ]; then
+            npm run check:testnet-manifest -- deployment/testnet/reviewed-manifest.json
+            echo "PRIVA_TESTNET_MANIFEST_PATH=deployment/testnet/reviewed-manifest.json" >> "$GITHUB_ENV"
+          fi
       - name: Build app
         env:
           PRIVA_PAGES_BUILD: '1'

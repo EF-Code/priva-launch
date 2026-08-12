@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:testnet": "PRIVA_PAGES_BUILD=1 PRIVA_TESTNET_MANIFEST_PATH=deployment/testnet/reviewed-manifest.json vite build",
     "preview": "vite preview",
     "gateway:local": "node services/local-gateway.mjs",
     "indexer:local": "node services/local-indexer.mjs",
@@ -19,6 +20,7 @@
     "compile:settlement-minter": "node scripts/compile-settlement-minter.cjs",
     "check:release": "node scripts/check-release-readiness.cjs",
     "check:testnet-manifest": "node scripts/check-testnet-manifest.cjs",
+    "check:testnet-endpoints": "node scripts/check-testnet-endpoints.mjs",
     "check:testnet-init": "node scripts/check-testnet-init-manifest.cjs",
     "check:testnet-signatures": "node scripts/check-signed-testnet-release.cjs",
     "create:testnet-payload": "node scripts/create-testnet-release-payload.cjs",
