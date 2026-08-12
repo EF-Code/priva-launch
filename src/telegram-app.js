@@ -29,7 +29,7 @@ export class TelegramAppIntegration {
   }
 
   /**
-   * Extract raw, Telegram-signed initData. Desktop/demo builds must not invent
+   * Extract raw, Telegram-signed initData. Non-Telegram builds must not invent
    * a fallback because a forged local value could be mistaken for identity.
    * @returns {string}
    */

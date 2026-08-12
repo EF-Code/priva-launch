@@ -4,9 +4,9 @@ import { buildTestnetBuyTransaction } from './ton-transaction.js';
 /**
  * Wallet boundary for Priva.
  *
- * The default instance stays in demo mode. A real connector can only be used
- * when a reviewed testnet manifest is supplied and the connector was created
- * from that manifest's pinned TonConnect URL.
+ * A real connector can only be used when a reviewed testnet manifest is
+ * supplied and the connector was created from that manifest's pinned
+ * TonConnect URL.
  */
 export class TonWalletManager {
   constructor({ deployment = deploymentConfig, connector = null } = {}) {
@@ -37,20 +37,13 @@ export class TonWalletManager {
     this.applyWallet(connector.wallet);
   }
 
-  async connectWallet(walletType = 'Tonkeeper') {
-    if (this.deployment?.mode !== 'testnet') {
-      // Demo-only behavior is retained for design previews, but the returned
-      // address is deliberately unusable and never reaches a transaction.
-      const address = `demo-${walletType.toLowerCase()}-local-only`;
-      this.applyWallet({ account: { address }, device: { appName: walletType } });
-      return { address, walletName: walletType, demo: true };
-    }
+  async connectWallet() {
     requireTestnetDeployment(this.deployment);
     if (!this.connector) throw new Error('TonConnect is unavailable until a reviewed testnet connector is configured.');
     await this.connector.openModal();
     this.applyWallet(this.connector.wallet);
     if (!this.walletAddress) throw new Error('Wallet connection was not established.');
-    return { address: this.walletAddress, walletName: this.walletName, demo: false };
+    return { address: this.walletAddress, walletName: this.walletName };
   }
 
   disconnect() {

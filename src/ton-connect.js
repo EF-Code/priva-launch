@@ -2,8 +2,8 @@ import { requireTestnetDeployment } from './deployment-config.js';
 
 /**
  * Lazily creates the TonConnect UI only after a reviewed testnet manifest has
- * been loaded. The dynamic import keeps demo builds free of wallet side
- * effects and makes a missing manifest fail closed.
+ * been loaded. The dynamic import keeps unconfigured builds free of wallet
+ * side effects and makes a missing manifest fail closed.
  */
 export async function createTestnetTonConnect(deployment) {
   const manifest = requireTestnetDeployment(deployment);

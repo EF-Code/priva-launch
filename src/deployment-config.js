@@ -1,12 +1,12 @@
 /**
  * Deployment capability gate.
  *
- * The frontend remains demo-only until a reviewed deployment manifest is
+ * The frontend remains unconfigured until a reviewed deployment manifest is
  * supplied at build time. This module intentionally contains no addresses or
  * fallback endpoint: an empty configuration must disable live interaction.
  */
-const demoDeploymentConfig = Object.freeze({
-  mode: 'demo',
+const unconfiguredDeploymentConfig = Object.freeze({
+  mode: 'unconfigured',
   network: 'testnet',
   manifestVersion: null,
   sourceRevision: null,
@@ -53,11 +53,11 @@ function loadRuntimeDeployment() {
   // The host must inject this object at build/deploy time. There is no URL,
   // query-string, local-storage, or user-entered fallback that can enable it.
   const candidate = typeof globalThis !== 'undefined' ? globalThis.__PRIVA_TESTNET_MANIFEST__ : null;
-  if (candidate == null) return demoDeploymentConfig;
+  if (candidate == null) return unconfiguredDeploymentConfig;
   try {
     return parseTestnetManifest(candidate);
   } catch (error) {
-    return Object.freeze({ ...demoDeploymentConfig, manifestError: error instanceof Error ? error.message : String(error) });
+    return Object.freeze({ ...unconfiguredDeploymentConfig, manifestError: error instanceof Error ? error.message : String(error) });
   }
 }
 

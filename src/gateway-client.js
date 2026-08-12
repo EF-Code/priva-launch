@@ -25,7 +25,8 @@ function validatePurchaseResponse(response, request) {
 
 /**
  * Builds the narrowly scoped proof request a live client may send to the
- * configured issuer gateway. It is unused in demo mode by design.
+ * configured issuer gateway. It is unavailable until a reviewed deployment
+ * manifest supplies the endpoint.
  */
 export class PrivaGatewayClient {
   constructor({ endpoint, fetchImpl = fetch } = {}) {
