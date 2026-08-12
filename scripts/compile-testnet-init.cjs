@@ -13,6 +13,7 @@ const buildArtifact = JSON.parse(fs.readFileSync(path.join(root, 'build', 'priva
 const minterArtifact = JSON.parse(fs.readFileSync(path.join(root, 'build', 'priva_settlement_minter.json'), 'utf8'));
 const walletArtifact = JSON.parse(fs.readFileSync(path.join(root, 'vendor', 'ton-token-contract', 'build', 'JettonWallet.compiled.json'), 'utf8'));
 const walletLibraryCellHash = require('@ton/core').Cell.fromBoc(Buffer.from(walletArtifact.libraryBoc, 'hex'))[0].hash().toString('hex');
+const walletLibraryCell = require('@ton/core').Cell.fromBoc(Buffer.from(walletArtifact.libraryBoc, 'hex'))[0];
 const codeCellHash = String(buildArtifact.hash || '').toLowerCase();
 if (!/^[a-f0-9]{64}$/.test(codeCellHash)) throw new Error('Acton build artifact has no valid launchpad code-cell hash. Run acton build first.');
 if (manifest.launchpadCodeSha256 !== codeCellHash) throw new Error('Manifest launchpadCodeSha256 does not match the current Acton build artifact.');
@@ -29,14 +30,19 @@ const u = (value, bits, name) => {
 const c = (value, name) => u(value, 120, name); // TON Coins is VarUInteger 16, <= 120 bits.
 const policy = manifest.policy || {};
 const sale = policy.saleTerms || {};
+const settlementTerms = beginCell()
+  .storeRef(walletLibraryCell)
+  .storeCoins(c(sale.walletFundingNanoTon, 'walletFundingNanoTon'))
+  .storeCoins(c(sale.mintMessageValueNanoTon, 'mintMessageValueNanoTon'))
+  .storeCoins(c(sale.refundGasReserveNanoTon, 'refundGasReserveNanoTon'))
+  .endCell();
 const saleTerms = beginCell()
   .storeAddress(Address.parse(sale.jettonMinter))
   .storeCoins(c(sale.priceNanoTonPerSaleUnit, 'priceNanoTonPerSaleUnit'))
   .storeUint(u(sale.totalSaleUnits, 64, 'totalSaleUnits'), 64)
   .storeCoins(c(sale.rawJettonPerSaleUnit, 'rawJettonPerSaleUnit'))
   .storeCoins(c(sale.identityCapNanoTon, 'identityCapNanoTon'))
-  .storeCoins(c(sale.walletFundingNanoTon, 'walletFundingNanoTon'))
-  .storeCoins(c(sale.mintMessageValueNanoTon, 'mintMessageValueNanoTon'))
+  .storeRef(settlementTerms)
   .endCell();
 const policyCell = beginCell()
   .storeUint(u(policy.appDomainHash, 256, 'appDomainHash'), 256)
@@ -51,7 +57,10 @@ const policyCell = beginCell()
 const settlement = beginCell().storeDict(null).storeDict(null).endCell();
 const accounting = beginCell()
   .storeUint(0, 64)
+  .storeUint(0, 64)
   .storeCoins(0n)
+  .storeCoins(0n)
+  .storeDict(null)
   .storeDict(null)
   .storeDict(null)
   .storeRef(settlement)
@@ -66,6 +75,7 @@ const result = {
   initialDataBocBase64: data.toBoc().toString('base64'),
   policyCellHash: policyCell.hash().toString('hex'),
   saleTermsCellHash: saleTerms.hash().toString('hex'),
+  settlementTermsCellHash: settlementTerms.hash().toString('hex'),
 };
 if (manifest.initialDataCellHash && manifest.initialDataCellHash !== result.initialDataCellHash) throw new Error('Manifest initialDataCellHash does not match its serialized StateInit data.');
 console.log(JSON.stringify(result, null, 2));

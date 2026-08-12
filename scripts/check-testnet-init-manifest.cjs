@@ -64,7 +64,7 @@ if (typeof policy.requirePremium !== 'boolean') throw new Error('policy.requireP
 const sale = policy.saleTerms;
 if (!sale || typeof sale !== 'object') throw new Error('Missing policy.saleTerms.');
 if (!tonAddress.test(sale.jettonMinter || '')) throw new Error('policy.saleTerms.jettonMinter must be a friendly TON address.');
-for (const name of ['priceNanoTonPerSaleUnit', 'totalSaleUnits', 'rawJettonPerSaleUnit', 'identityCapNanoTon', 'walletFundingNanoTon', 'mintMessageValueNanoTon']) requireDecimal(`policy.saleTerms.${name}`, sale[name], { nonZero: true });
+for (const name of ['priceNanoTonPerSaleUnit', 'totalSaleUnits', 'rawJettonPerSaleUnit', 'identityCapNanoTon', 'walletFundingNanoTon', 'mintMessageValueNanoTon', 'refundGasReserveNanoTon']) requireDecimal(`policy.saleTerms.${name}`, sale[name], { nonZero: true });
 if (BigInt(sale.mintMessageValueNanoTon) < BigInt(sale.walletFundingNanoTon)) throw new Error('mintMessageValueNanoTon must cover walletFundingNanoTon.');
 
 console.log('✓ Reviewed testnet initialization manifest is structurally valid');

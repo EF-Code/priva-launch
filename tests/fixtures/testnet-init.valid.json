@@ -7,7 +7,7 @@
   "settlementMinterWalletCodeSha256": "8d28ea421b77e805fea52acf335296499f03aec8e9fd21ddb5f2564aa65c48de",
   "settlementMinterUpstreamRevision": "d55f228edb0eb477cb4845d67e0dacc6489c6b57",
   "settlementMinterCallbackOpcode": "0x50525646",
-  "initialDataCellHash": "aab6bfb90c4c839b7c91d08dbe7159fff481215a7d69879186f5784f0053c0b0",
+  "initialDataCellHash": "8373af0eccc949d8378d5004ac274451da80f910c9c6f7ed137bdd00dd6e4d72",
   "circuit": { "version": 1, "verificationKeySha256": "7454d4f4663b455dd2753dec56acabce5bb662a89a50dc22d22d6c07ad5121e4" },
   "review": {
     "mode": "solo-owner-attested",
@@ -33,7 +33,8 @@
       "rawJettonPerSaleUnit": "1000000000",
       "identityCapNanoTon": "4250000000",
       "walletFundingNanoTon": "50000000",
-      "mintMessageValueNanoTon": "50000000"
+      "mintMessageValueNanoTon": "50000000",
+      "refundGasReserveNanoTon": "5000000"
     }
   }
 }
