@@ -39,6 +39,7 @@ jobs:
           cp docs/testnet/v1/metadata.json dist/testnet/v1/metadata.json
           cp docs/testnet/v1/token.svg dist/testnet/v1/token.svg
           cp public/icon.svg dist/icon.svg
+          cp public/icon.png dist/icon.png
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
