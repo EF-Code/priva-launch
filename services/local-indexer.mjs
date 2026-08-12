@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * Loopback-only read-through indexer boundary.
+ * Read-through indexer boundary.
  *
- * It never contains launch fixtures. Without an explicitly configured HTTPS
- * upstream it returns 503, which keeps the UI read-only instead of inventing
- * chain state. The upstream is expected to be a separately operated indexer
- * that derives records from confirmed TON testnet transactions.
+ * Local mode is loopback-only. Render mode is an explicit public testnet
+ * proxy profile and requires an HTTPS upstream; neither mode contains launch
+ * fixtures. Without an upstream it returns 503, which keeps the UI read-only
+ * instead of inventing chain state. The upstream is expected to be a
+ * separately operated indexer that derives records from confirmed TON
+ * testnet transactions.
  */
 
 import http from 'node:http';
@@ -28,13 +30,17 @@ function parseAddress(value) {
 }
 
 function loadConfig() {
-  if (process.env.PRIVA_INDEXER_MODE !== 'local') throw new Error('Set PRIVA_INDEXER_MODE=local; this service refuses non-local mode.');
-  const host = process.env.PRIVA_INDEXER_HOST?.trim() || '127.0.0.1';
-  if (!['127.0.0.1', '::1', 'localhost'].includes(host)) throw new Error('The local indexer only binds to loopback addresses.');
-  const port = Number(process.env.PRIVA_INDEXER_PORT || 8788);
+  const mode = process.env.PRIVA_INDEXER_MODE?.trim();
+  if (!['local', 'render'].includes(mode)) throw new Error('Set PRIVA_INDEXER_MODE=local or render.');
+  const publicMode = mode === 'render';
+  const host = process.env.PRIVA_INDEXER_HOST?.trim() || (publicMode ? '0.0.0.0' : '127.0.0.1');
+  if (publicMode && host !== '0.0.0.0') throw new Error('Render indexer must bind to 0.0.0.0.');
+  if (!publicMode && !['127.0.0.1', '::1', 'localhost'].includes(host)) throw new Error('The local indexer only binds to loopback addresses.');
+  const port = Number(process.env.PRIVA_INDEXER_PORT || process.env.PORT || (publicMode ? 10000 : 8788));
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('PRIVA_INDEXER_PORT must be a valid TCP port.');
   const corsOrigin = process.env.PRIVA_CORS_ORIGIN?.trim() || 'http://localhost:5173';
   const upstream = process.env.PRIVA_INDEXER_UPSTREAM?.trim() || null;
+  if (publicMode && !upstream) throw new Error('Render indexer requires PRIVA_INDEXER_UPSTREAM over HTTPS.');
   if (upstream) {
     const url = new URL(upstream);
     const local = ['127.0.0.1', '::1', 'localhost'].includes(url.hostname);
@@ -42,8 +48,14 @@ function loadConfig() {
     if (url.pathname.endsWith('/')) url.pathname = url.pathname.slice(0, -1);
   }
   const launchpad = process.env.PRIVA_LAUNCHPAD_ADDRESS?.trim();
+  if (publicMode && !launchpad) throw new Error('Render indexer requires PRIVA_LAUNCHPAD_ADDRESS.');
   const launchpadRaw = launchpad ? parseAddress(launchpad).toRawString() : null;
-  return Object.freeze({ host, port, corsOrigin, upstream, launchpadRaw });
+  if (publicMode) {
+    let origin;
+    try { origin = new URL(corsOrigin); } catch { throw new Error('PRIVA_CORS_ORIGIN must be an absolute HTTPS origin.'); }
+    if (origin.protocol !== 'https:' || origin.pathname !== '/' || origin.search || origin.hash) throw new Error('Render indexer CORS origin must be an HTTPS origin without a path.');
+  }
+  return Object.freeze({ mode, host, port, corsOrigin, upstream, launchpadRaw });
 }
 
 function jsonResponse(response, status, payload) {
@@ -115,7 +127,7 @@ export function createLocalIndexerServer(config) {
       return;
     }
     if (request.method === 'GET' && request.url === '/healthz') {
-      jsonResponse(response, 200, { service: 'priva-indexer', mode: 'local', upstreamConfigured: Boolean(config.upstream) });
+      jsonResponse(response, 200, { service: 'priva-indexer', mode: config.mode, upstreamConfigured: Boolean(config.upstream) });
       return;
     }
     if (request.method !== 'GET') {
@@ -147,7 +159,7 @@ export function startLocalIndexer() {
   const config = loadConfig();
   const server = createLocalIndexerServer(config);
   server.listen(config.port, config.host, () => {
-    console.log(`Priva local indexer listening on http://${config.host}:${config.port}`);
+    console.log(`Priva ${config.mode} indexer listening on http://${config.host}:${config.port}`);
     console.log(`Upstream configured: ${config.upstream ? 'yes' : 'no (read-only 503 until configured)'}`);
   });
   return server;

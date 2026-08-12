@@ -70,6 +70,29 @@ async function runGatewayTest() {
   }
 }
 
+async function runRenderGatewayModeTest() {
+  const service = launch('services/local-gateway.mjs', {
+    PRIVA_GATEWAY_MODE: 'render',
+    PRIVA_GATEWAY_HOST: '0.0.0.0',
+    PRIVA_GATEWAY_PORT: '18789',
+    TELEGRAM_BOT_TOKEN: 'unit-test-token',
+    PRIVA_ISSUER_SECRET: '123',
+    PRIVA_APP_DOMAIN: 'ef-code.github.io',
+    PRIVA_LAUNCH_ID: 'local-launch-v1',
+    PRIVA_LAUNCH_ID_HASH: '1',
+    PRIVA_LAUNCHPAD_ADDRESS: address,
+    PRIVA_CORS_ORIGIN: 'https://ef-code.github.io',
+    ZK_TELE_AUTH_ARTIFACTS_DIR: path.join(root, 'vendor/zk-tele-auth/artifacts'),
+  });
+  try {
+    const health = await waitFor('http://127.0.0.1:18789/healthz', service.child, service.getOutput);
+    assert.equal(health.status, 200);
+    assert.deepEqual(await health.json(), { service: 'priva-gateway', mode: 'render', configured: true, circuitVersion: 1 });
+  } finally {
+    await stop(service.child);
+  }
+}
+
 async function runIndexerTest() {
   const service = launch('services/local-indexer.mjs', {
     PRIVA_INDEXER_MODE: 'local',
@@ -90,7 +113,25 @@ async function runIndexerTest() {
   }
 }
 
-Promise.all([runGatewayTest(), runIndexerTest()])
+async function runRenderIndexerConfigTest() {
+  const service = launch('services/local-indexer.mjs', {
+    PRIVA_INDEXER_MODE: 'render',
+    PRIVA_INDEXER_HOST: '0.0.0.0',
+    PRIVA_CORS_ORIGIN: 'https://ef-code.github.io',
+    PRIVA_LAUNCHPAD_ADDRESS: address,
+  });
+  await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`render indexer did not fail closed: ${service.getOutput()}`)), 8000);
+    service.child.once('exit', (code) => {
+      clearTimeout(timer);
+      assert.equal(code, 1);
+      assert.match(service.getOutput(), /requires PRIVA_INDEXER_UPSTREAM/);
+      resolve();
+    });
+  });
+}
+
+Promise.all([runGatewayTest(), runRenderGatewayModeTest(), runIndexerTest(), runRenderIndexerConfigTest()])
   .then(() => console.log('✅ Local gateway/indexer boundary tests passed'))
   .catch((error) => {
     console.error(error);

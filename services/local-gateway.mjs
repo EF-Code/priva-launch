@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * Loopback-only Priva proof gateway.
+ * Priva proof gateway.
  *
- * This service is deliberately not a deployment endpoint. It requires an
- * explicit local mode, binds only to 127.0.0.1, and refuses to start without
- * real operator-supplied Telegram/issuer policy. The issuer secret and bot
- * token are read from the process environment and are never returned by an
- * endpoint or written to logs.
+ * Local mode remains loopback-only. Render mode is an explicit production-like
+ * testnet deployment profile for a managed host that terminates HTTPS; it
+ * binds to the platform port, requires an HTTPS CORS origin, and still refuses
+ * to start without real operator-supplied Telegram/issuer policy. The issuer
+ * secret and bot token are read from the process environment and are never
+ * returned by an endpoint or written to logs.
  */
 
 import http from 'node:http';
@@ -65,9 +66,9 @@ function parseBasechainAddress(name, value) {
 }
 
 function loadConfig() {
-  if (process.env.PRIVA_GATEWAY_MODE !== 'local') {
-    throw new Error('Set PRIVA_GATEWAY_MODE=local; this service refuses non-local mode.');
-  }
+  const mode = process.env.PRIVA_GATEWAY_MODE?.trim();
+  if (!['local', 'render'].includes(mode)) throw new Error('Set PRIVA_GATEWAY_MODE=local or render.');
+  const publicMode = mode === 'render';
 
   const launchpad = parseBasechainAddress('PRIVA_LAUNCHPAD_ADDRESS', required('PRIVA_LAUNCHPAD_ADDRESS'));
   const launchpadAddress = launchpad.toRawString();
@@ -91,17 +92,19 @@ function loadConfig() {
   if (!['http:', 'https:'].includes(parsedOrigin.protocol) || parsedOrigin.pathname !== '/' || parsedOrigin.search || parsedOrigin.hash) {
     throw new Error('PRIVA_CORS_ORIGIN must be an origin without a path, query, or fragment.');
   }
+  if (publicMode && parsedOrigin.protocol !== 'https:') throw new Error('Render gateway CORS origin must use HTTPS.');
 
-  const host = process.env.PRIVA_GATEWAY_HOST?.trim() || '127.0.0.1';
-  if (!['127.0.0.1', '::1', 'localhost'].includes(host)) {
-    throw new Error('The local gateway only binds to loopback addresses.');
-  }
+  const host = process.env.PRIVA_GATEWAY_HOST?.trim() || (publicMode ? '0.0.0.0' : '127.0.0.1');
+  const loopback = ['127.0.0.1', '::1', 'localhost'].includes(host);
+  if (!publicMode && !loopback) throw new Error('The local gateway only binds to loopback addresses.');
+  if (publicMode && host !== '0.0.0.0') throw new Error('Render gateway must bind to 0.0.0.0.');
 
-  const port = Number(process.env.PRIVA_GATEWAY_PORT || 8787);
+  const port = Number(process.env.PRIVA_GATEWAY_PORT || process.env.PORT || (publicMode ? 10000 : 8787));
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('PRIVA_GATEWAY_PORT must be a valid TCP port.');
 
   return Object.freeze({
     botToken: required('TELEGRAM_BOT_TOKEN'),
+    mode,
     issuerSecret,
     appDomain,
     launchId,
@@ -248,7 +251,7 @@ export function createLocalGatewayServer(config, gateway) {
       return;
     }
     if (request.method === 'GET' && request.url === '/healthz') {
-      jsonResponse(response, 200, { service: 'priva-gateway', mode: 'local', configured: true, circuitVersion: 1 });
+      jsonResponse(response, 200, { service: 'priva-gateway', mode: config.mode, configured: true, circuitVersion: 1 });
       return;
     }
     if (request.method !== 'POST' || request.url !== '/v1/purchase-authorizations') {
@@ -282,7 +285,7 @@ export function startLocalGateway() {
   });
   const server = createLocalGatewayServer(config, gateway);
   server.listen(config.port, config.host, () => {
-    console.log(`Priva local gateway listening on http://${config.host}:${config.port}`);
+    console.log(`Priva ${config.mode} gateway listening on http://${config.host}:${config.port}`);
     console.log(`CORS origin restricted to ${config.corsOrigin}`);
     console.log(`Circuit artifacts loaded from ${config.artifactsDir}`);
   });
