@@ -38,6 +38,22 @@ The service intentionally requires `PRIVA_GATEWAY_MODE=local` and rejects any
 non-loopback bind address. A public HTTPS gateway still requires a separately
 operated TLS service and a reviewed manifest URL.
 
+To avoid placing either secret in shell history, `npm run gateway:keyring`
+loads `issuer-secret` and `telegram-bot-token` from GNOME Secret Service and
+loads the non-secret policy values from
+`$XDG_STATE_HOME/priva/testnet-policy.env` (or `PRIVA_POLICY_FILE`). It still
+binds only to loopback and remains unsuitable as a public endpoint. Store the
+Telegram token directly in the keyring; never paste it into chat or commit it.
+
+```bash
+secret-tool store --label='Priva Telegram bot token' service priva-launch item telegram-bot-token
+npm run gateway:keyring
+```
+
+The keyring launcher does not print, persist, or pass secrets as command-line
+arguments. It exits before starting the gateway when a required item or policy
+field is absent.
+
 ## Indexer proxy
 
 The local indexer is a read-only proxy. It has no fixtures and returns `503`

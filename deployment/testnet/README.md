@@ -124,6 +124,22 @@ address and transaction hash must then be recorded in the real manifest/evidence
 package. No live address, transaction hash, or reviewer signature is created by
 the emulator run.
 
+To derive the minter data cell from the actual connected admin wallet and the
+public metadata URL, run the read-only helper after compiling the pinned
+minter:
+
+```bash
+npm run compile:settlement-minter
+npm run create:testnet-minter-init -- \
+  <CONNECTED_TESTNET_ADMIN_ADDRESS> \
+  https://ef-code.github.io/priva-launch/testnet/v1/metadata.json
+```
+
+The JSON contains the StateInit-derived testnet address, code/data hashes, and
+both hex/base64 data BoC encodings. Store that output outside the repository
+with mode `0600`; it is an input to the deployment preflight, not a reviewed
+runtime manifest. The helper performs no network request and sends no funds.
+
 Run the minter preflight with the same reviewed data cell and expected values:
 
 ```bash
