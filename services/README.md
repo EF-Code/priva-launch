@@ -1,8 +1,11 @@
 # Local service boundary
 
-The local services are development adapters only. They bind to loopback and
-cannot be used as public deployment endpoints or inserted into a reviewed
-testnet manifest.
+The default local services are development adapters only. They bind to
+loopback and cannot be used as public deployment endpoints or inserted into a
+reviewed testnet manifest. For controlled testnet hosting, `render.yaml`
+selects the explicit `render` mode, which binds to `0.0.0.0` behind Render's
+TLS proxy and requires an HTTPS CORS origin. It is still not a mainnet
+deployment profile.
 
 ## Gateway
 
@@ -34,9 +37,13 @@ expected by `zk-tele-auth`, self-verifies the proof, and splits the generated
 Tolk verifier message into the two BOCs expected by Priva. It never logs the
 request body or returns the issuer secret.
 
-The service intentionally requires `PRIVA_GATEWAY_MODE=local` and rejects any
-non-loopback bind address. A public HTTPS gateway still requires a separately
-operated TLS service and a reviewed manifest URL.
+The default service intentionally requires `PRIVA_GATEWAY_MODE=local` and
+rejects any non-loopback bind address. A public HTTPS gateway still requires a
+separately operated TLS service and a reviewed manifest URL.
+
+The Render blueprint uses `PRIVA_GATEWAY_MODE=render` instead. That mode is
+strictly opt-in, requires the same real policy/secrets, and uses Render's
+platform `PORT`; it does not accept a public bind when local mode is selected.
 
 To avoid placing either secret in shell history, `npm run gateway:keyring`
 loads `issuer-secret` and `telegram-bot-token` from GNOME Secret Service and
@@ -65,6 +72,11 @@ export PRIVA_INDEXER_UPSTREAM='https://your-real-indexer.example'
 export PRIVA_LAUNCHPAD_ADDRESS='the exact deployed testnet launchpad address'
 npm run indexer:local
 ```
+
+The Render blueprint uses `PRIVA_INDEXER_MODE=render`, requires a public HTTPS
+`PRIVA_INDEXER_UPSTREAM`, and binds to the platform `PORT`. It remains a
+read-through proxy: without a real upstream it refuses to start rather than
+serving fabricated launch data.
 
 It listens on `http://127.0.0.1:8788` and serves `/v1/launches` and
 `/v1/purchases/<numeric-query-id>` only after validating the upstream response

@@ -1,0 +1,59 @@
+# Render blueprint for controlled testnet-only operation.
+#
+# This deliberately does not contain Telegram or issuer secrets. Render asks
+# for every `sync: false` value during blueprint creation; store those values
+# in Render's encrypted environment, not in this repository.
+services:
+  - type: web
+    name: priva-gateway
+    runtime: node
+    plan: free
+    buildCommand: git submodule update --init --recursive && npm ci && npm --prefix vendor/zk-tele-auth ci --include=dev
+    startCommand: npm run gateway:render
+    healthCheckPath: /healthz
+    envVars:
+      - key: PRIVA_GATEWAY_MODE
+        value: render
+      - key: PRIVA_GATEWAY_HOST
+        value: 0.0.0.0
+      - key: PRIVA_APP_DOMAIN
+        value: ef-code.github.io
+      - key: PRIVA_CORS_ORIGIN
+        value: https://ef-code.github.io
+      - key: PRIVA_LAUNCHPAD_ADDRESS
+        value: kQBjcIMOEWAKW11x17u7RpiLuJLJft7x5L4-A6I4pEdGa7zq
+      - key: ZK_TELE_AUTH_ARTIFACTS_DIR
+        value: vendor/zk-tele-auth/artifacts
+      - key: PRIVA_MAX_TOKEN_AGE_SEC
+        value: "3600"
+      - key: PRIVA_MAX_AUTHORIZATION_TTL_SEC
+        value: "300"
+      - key: PRIVA_REQUIRE_PREMIUM
+        value: "false"
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: PRIVA_ISSUER_SECRET
+        sync: false
+      - key: PRIVA_LAUNCH_ID
+        sync: false
+      - key: PRIVA_LAUNCH_ID_HASH
+        sync: false
+
+  - type: web
+    name: priva-indexer
+    runtime: node
+    plan: free
+    buildCommand: git submodule update --init --recursive && npm ci
+    startCommand: npm run indexer:render
+    healthCheckPath: /healthz
+    envVars:
+      - key: PRIVA_INDEXER_MODE
+        value: render
+      - key: PRIVA_INDEXER_HOST
+        value: 0.0.0.0
+      - key: PRIVA_CORS_ORIGIN
+        value: https://ef-code.github.io
+      - key: PRIVA_LAUNCHPAD_ADDRESS
+        value: kQBjcIMOEWAKW11x17u7RpiLuJLJft7x5L4-A6I4pEdGa7zq
+      - key: PRIVA_INDEXER_UPSTREAM
+        sync: false
