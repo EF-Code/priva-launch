@@ -74,6 +74,16 @@ bounce handling is part of the launchpad state machine, not a frontend task.
 Its fail-closed scaffold and enablement criteria are in the
 [DeDust adapter contract](DEDUST_ADAPTER_CONTRACT.md).
 
+### Fixed-price testnet profile
+
+The lifecycle-tested testnet launchpad can run a bounded fixed-price sale with
+DEX migration disabled. Its reviewed manifest must declare
+`dex.kind: "none"`, `dex.migration: "disabled"`, and
+`dex.reason: "fixed-price-testnet-sale"`; this policy is intentionally not a
+claim that the DeDust adapter or factory is deployable. A later migration
+profile requires its own verified DeDust addresses, code hashes, callbacks,
+bounces, and end-to-end traces.
+
 ## Implementation order
 
 1. Adopt and test the selected TEP-74 reference implementation unchanged.
