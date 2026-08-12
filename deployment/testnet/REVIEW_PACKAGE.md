@@ -11,7 +11,9 @@ The release authority creates these files after deployment:
 * `reviewed-init.json` — exact launchpad StateInit inputs, immutable policy,
   and the inlined verifier source/code binding;
 * `reviewed-manifest.json` — deployed addresses, endpoints, code hashes, and
-  testnet-only runtime configuration;
+  testnet-only runtime configuration. A fixed-price sale may use the explicit
+  no-DEX policy (`kind: "none"`, `migration: "disabled"`,
+  `reason: "fixed-price-testnet-sale"`); that is not DeDust enablement;
 * `reviewed-release-payload.json` — canonical compact JSON binding both
   manifest digests to one source revision;
 * `reviewed-release.json` — release envelope consumed by
