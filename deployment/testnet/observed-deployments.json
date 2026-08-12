@@ -38,6 +38,21 @@
     "state": "active",
     "explorerUrl": "https://testnet.tonscan.org/tx/5aa8ed02a640a1abc9d4813fb155d88718d0a805f7fa4376eefc3b42da7fff28"
   },
+  "adminHandoff": {
+    "changeAdminTransactionHash": "2baeaf7d7ea7f03cc061474ef80dca9ef44cf589d9c79eb84844aea1307be118",
+    "claimTransactionHash": "613eec72caa7891de2b7f7aba7b21b4397b210a22cf1a3e25ee033a79e61459a",
+    "initialAdminAddress": "kQDPUr6rb5cCqZFv0iHNCX5dJX3_De_zJrKO7Xlr17QWGHuK",
+    "finalAdminAddress": "kQBjcIMOEWAKW11x17u7RpiLuJLJft7x5L4-A6I4pEdGa7zq",
+    "nextAdminAddress": null,
+    "adminLocked": true,
+    "verifiedAt": "2026-08-12T11:41:36Z",
+    "postHandoffAccountTransactionHash": "56ac4b6f98daa9a7cad135d4623c823a38e42425ced48f4de05c57a1bf205133",
+    "postHandoffAccountTransactionLt": "89369071000005",
+    "explorerUrls": [
+      "https://testnet.tonscan.org/tx/2baeaf7d7ea7f03cc061474ef80dca9ef44cf589d9c79eb84844aea1307be118",
+      "https://testnet.tonscan.org/tx/613eec72caa7891de2b7f7aba7b21b4397b210a22cf1a3e25ee033a79e61459a"
+    ]
+  },
   "verification": {
     "provider": "https://testnet.toncenter.com/api/v2/getAddressInformation",
     "checked": [
