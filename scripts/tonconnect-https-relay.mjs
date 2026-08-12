@@ -3,9 +3,10 @@
  * Loopback-only HTTPS relay for Acton's local TON Connect page.
  *
  * Acton 1.0.0 serves HTTP and hard-codes the Acton documentation manifest.
- * Brave/Tonkeeper correctly rejects that origin mismatch. This relay serves
- * the same page over a locally trusted HTTPS certificate, advertises the
- * matching loopback origin, and forwards only Acton's TON Connect API routes.
+ * This relay is useful for inspecting the page/API locally, but wallets may
+ * still reject loopback manifests because their manifest fetch must be
+ * publicly reachable. It advertises the matching loopback origin and forwards
+ * only Acton's TON Connect API routes.
  * It is a development diagnostic, not a public proxy or deployment service.
  */
 import fs from 'node:fs';

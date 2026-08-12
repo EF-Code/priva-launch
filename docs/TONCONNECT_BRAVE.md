@@ -2,14 +2,30 @@
 
 Acton 1.0.0 serves its TON Connect page over `http://127.0.0.1` but embeds
 Acton's public manifest. Brave's Tonkeeper extension correctly blocks that
-origin mismatch. The repository includes a loopback-only HTTPS relay for
-development; it does not change a transaction, contract, wallet, or network.
+origin mismatch. The repository includes a public HTTPS, no-transaction probe
+for wallet connectivity and a loopback relay for local page/API inspection.
 
-This is a local diagnostic path. It is not a production dApp origin and must
-not be used as a substitute for the reviewed public HTTPS manifest required by
-the testnet release gate.
+The public probe is the supported way to verify the Brave/Tonkeeper extension.
+The loopback relay is not a substitute for a public dApp origin and must not be
+used as a substitute for the reviewed HTTPS manifest required by the testnet
+release gate.
 
-## One-time local trust setup
+## Public wallet smoke test
+
+After the Pages deployment completes, open
+`https://ef-code.github.io/priva-launch/tonconnect-probe.html`. The manifest
+and icon are public HTTPS assets on the same GitHub Pages origin. The page only
+requests the wallet address; it has no `sendTransaction` call. Tonkeeper should
+show **Priva Launchpad**, and the page should display the connected chain.
+
+## Optional local relay inspection
+
+The local relay can be used to inspect an Acton page and its loopback API, but a
+wallet may still return `MANIFEST_NOT_FOUND_ERROR` because wallets are allowed
+to require a publicly reachable manifest. Use the public smoke test above for
+the browser-extension connection check.
+
+### One-time local trust setup
 
 Close Brave before changing its certificate database, then run:
 

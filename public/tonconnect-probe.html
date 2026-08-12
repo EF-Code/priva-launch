@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>Priva TON Connect test</title>
+    <script src="https://unpkg.com/@tonconnect/sdk@4.0.2/dist/tonconnect-sdk.min.js"
+      integrity="sha384-DB3wwImQd4kuQLDGPggH5TrrKZQ327WYvYN1YyYg+GAI2ZkWhh4o7GaqSPHanwqH"
+      crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/@tonconnect/ui@3.0.2/dist/tonconnect-ui.min.js"
+      integrity="sha384-BTareOTsWX/2zcVxklvKhoTWnYXs1NbbMON7wL80t6xeld55HGlSS/oBJmrEvNG9"
+      crossorigin="anonymous"></script>
+    <style>
+      :root { color-scheme: dark; font: 16px/1.5 system-ui, sans-serif; background: #11101d; color: #f8f7ff; }
+      body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; box-sizing: border-box; }
+      main { width: min(560px, 100%); padding: 32px; border: 1px solid #38334e; border-radius: 18px; background: #19172a; }
+      h1 { margin-top: 0; } p { color: #b8b3c8; } #status { margin-top: 20px; overflow-wrap: anywhere; }
+      .warning { color: #f3c47a; } code { color: #bca8ff; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Priva TON Connect test</h1>
+      <p>This public HTTPS page tests the Brave/Tonkeeper connection only. It
+        has no transaction request and cannot move funds.</p>
+      <div id="ton-connect-button"></div>
+      <p id="status" class="warning">Waiting for wallet connection…</p>
+      <p>Manifest: <code>/tonconnect-manifest.json</code></p>
+    </main>
+    <script>
+      (() => {
+        const status = document.querySelector('#status');
+        const manifestUrl = 'https://ef-code.github.io/priva-launch/tonconnect-manifest.json';
+        const ui = new TON_CONNECT_UI.TonConnectUI({
+          manifestUrl,
+          buttonRootId: 'ton-connect-button',
+        });
+        ui.onStatusChange((wallet) => {
+          if (!wallet || !wallet.account) {
+            status.textContent = 'Waiting for wallet connection…';
+            return;
+          }
+          status.textContent = `Connected: ${wallet.account.address} · chain ${wallet.account.chain}`;
+        });
+      })();
+    </script>
+  </body>
+</html>

@@ -19,6 +19,11 @@ function runTonConnectRelayTests() {
   assert.match(probe, /promptWallet/);
   assert.doesNotMatch(probe, /net\.send/);
 
+  const publicProbe = fs.readFileSync(path.join(root, 'public', 'tonconnect-probe.html'), 'utf8');
+  assert.match(publicProbe, /https:\/\/ef-code\.github\.io\/priva-launch\/tonconnect-manifest\.json/);
+  assert.match(publicProbe, /integrity="sha384-/);
+  assert.doesNotMatch(publicProbe, /sendTransaction/);
+
   const cert = fs.readFileSync(path.join(root, 'scripts', 'setup-tonconnect-dev-cert.mjs'), 'utf8');
   assert.match(cert, /--install-nss/);
   assert.match(cert, /--remove-nss/);
