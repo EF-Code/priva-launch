@@ -17,7 +17,8 @@
     "accountTransactionHash": "e71b21437c1869670f1ece29486d1139125e803e3218958c418a3740ab094769",
     "accountTransactionLt": "89367303000003",
     "codeCellHash": "12735d631a291d42da0ea5895cf274f66af22d0c22f0229751296b3c818b5f5d",
-    "dataCellHash": "36a695a59dedd374eee13f19c57fbd1895067a81bb2ce5fd02e1803ba8cef350",
+    "initialDataCellHash": "36a695a59dedd374eee13f19c57fbd1895067a81bb2ce5fd02e1803ba8cef350",
+    "dataCellHash": "2b6826a0eb35105232d60a46edf89399ec46752fa5d0d7aae065781384bbf4c9",
     "walletLibraryCellHash": "8d28ea421b77e805fea52acf335296499f03aec8e9fd21ddb5f2564aa65c48de",
     "state": "active",
     "explorerUrl": "https://testnet.tonscan.org/tx/6985c055f97f7736b0c9717412b6cb76b1cf564feb875ed76963fbcc250ed1b4"

@@ -43,6 +43,19 @@ deliberate: it is chain evidence, not a substitute for the runtime manifest.
 The verifier endpoint, public gateway/indexer, and DEX addresses remain
 unfilled until those services and contracts exist.
 
+Re-check the live public chain state at any time with:
+
+```bash
+npm run check:testnet-deployments
+```
+
+The command validates active accounts, code/data hashes, deployment
+and the minter's final `admin`, `next_admin`, and lock fields. Add
+`--with-transactions` when the public API rate limit permits bounded history
+lookups; that mode also checks the recorded account transaction hashes. Set
+`PRIVA_TESTNET_CHAIN_API` only to a trusted TON Center-compatible read-only API
+root if the default public endpoint is unavailable.
+
 Validate a supplied manifest with `npm run check:testnet-manifest --
 deployment/testnet/reviewed-manifest.json`. The command checks shape and public
 integrity only; it does not certify an address, operator, or audit.
