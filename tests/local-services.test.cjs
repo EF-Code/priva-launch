@@ -1,4 +1,5 @@
 const assert = require('assert/strict');
+const http = require('http');
 const { spawn } = require('child_process');
 const path = require('path');
 
@@ -103,7 +104,7 @@ async function runIndexerTest() {
   try {
     const health = await waitFor('http://127.0.0.1:18788/healthz', service.child, service.getOutput);
     assert.equal(health.status, 200);
-    assert.deepEqual(await health.json(), { service: 'priva-indexer', mode: 'local', upstreamConfigured: false });
+    assert.deepEqual(await health.json(), { service: 'priva-indexer', mode: 'local', upstreamConfigured: false, chainConfigured: false });
 
     const launches = await fetch('http://127.0.0.1:18788/v1/launches');
     assert.equal(launches.status, 503);
@@ -125,13 +126,89 @@ async function runRenderIndexerConfigTest() {
     service.child.once('exit', (code) => {
       clearTimeout(timer);
       assert.equal(code, 1);
-      assert.match(service.getOutput(), /requires PRIVA_INDEXER_UPSTREAM/);
+      assert.match(service.getOutput(), /requires PRIVA_LAUNCH_ID/);
       resolve();
     });
   });
 }
 
-Promise.all([runGatewayTest(), runRenderGatewayModeTest(), runIndexerTest(), runRenderIndexerConfigTest()])
+async function listen(server, port) {
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(port, '127.0.0.1', resolve);
+  });
+}
+
+async function runDirectIndexerTest() {
+  const chain = http.createServer((request, response) => {
+    response.setHeader('Content-Type', 'application/json');
+    if (request.url?.startsWith('/messages?')) {
+      response.end(JSON.stringify({ messages: [{ source: address }, { source: address }] }));
+      return;
+    }
+    if (request.url === '/runGetMethod') {
+      let body = '';
+      request.on('data', (chunk) => { body += chunk.toString(); });
+      request.on('end', () => {
+        const requestBody = JSON.parse(body);
+        if (requestBody.method === 'getPrivaTestnetAccounting') {
+          response.end(JSON.stringify({ stack: [{ value: '0x2' }, { value: '0x1' }, { value: '0x12a05f200' }, { value: '0x0' }] }));
+          return;
+        }
+        if (requestBody.method === 'getPrivaTestnetQueryState') {
+          response.end(JSON.stringify({ stack: [{ value: '0x2' }] }));
+          return;
+        }
+        response.statusCode = 404;
+        response.end(JSON.stringify({ error: 'unknown getter' }));
+      });
+      return;
+    }
+    response.statusCode = 404;
+    response.end(JSON.stringify({ error: 'not found' }));
+  });
+  await listen(chain, 18790);
+  const { Address } = await import('@ton/core');
+  const { createLocalIndexerServer } = await import('../services/local-indexer.mjs');
+  const launchpadRaw = Address.parse(address).toRawString();
+  const indexer = createLocalIndexerServer(Object.freeze({
+    mode: 'render',
+    host: '127.0.0.1',
+    port: 18791,
+    corsOrigin: 'https://ef-code.github.io',
+    upstream: null,
+    launchpadAddress: address,
+    launchpadRaw,
+    chainApi: 'http://127.0.0.1:18790',
+    direct: true,
+    launchId: 'direct-test-launch',
+    launchName: 'Direct Test Launch',
+    launchSymbol: 'DTL',
+    launchEnds: 'test window',
+    priceNanoTonPerSaleUnit: '85',
+    totalSaleUnits: '1000000000',
+    refundGasReserveNanoTon: '50000000',
+    mintMessageValueNanoTon: '200000000',
+  }));
+  await listen(indexer, 18791);
+  try {
+    const launches = await fetch('http://127.0.0.1:18791/v1/launches');
+    assert.equal(launches.status, 200);
+    const body = await launches.json();
+    assert.equal(body.launches.length, 1);
+    assert.equal(body.launches[0].raisedTon, 5);
+    assert.equal(body.launches[0].participants, 1);
+    assert.equal(body.launches[0].remainingSaleUnits, '999999997');
+
+    const purchase = await fetch('http://127.0.0.1:18791/v1/purchases/7');
+    assert.deepEqual(await purchase.json(), { queryId: '7', state: '2' });
+  } finally {
+    await new Promise((resolve) => indexer.close(resolve));
+    await new Promise((resolve) => chain.close(resolve));
+  }
+}
+
+Promise.all([runGatewayTest(), runRenderGatewayModeTest(), runIndexerTest(), runRenderIndexerConfigTest(), runDirectIndexerTest()])
   .then(() => console.log('✅ Local gateway/indexer boundary tests passed'))
   .catch((error) => {
     console.error(error);

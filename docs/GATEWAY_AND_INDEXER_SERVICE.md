@@ -86,16 +86,20 @@ The client rejects malformed records and renders no fixtures when a reviewed
 testnet indexer is unavailable. This endpoint is discovery-only; purchase
 confirmation must use the transaction fields described above.
 
-The local indexer under `services/local-indexer.mjs` is a read-through proxy,
-not a fixture server. Without `PRIVA_INDEXER_UPSTREAM` it returns `503` for
-launch data. When configured, it validates the response and requires every
-launch to match `PRIVA_LAUNCHPAD_ADDRESS` before forwarding it to the UI. In
-the explicit Render testnet profile it also reads
-`getPrivaTestnetAccounting` from the configured public TON Center-compatible
-chain API and replaces the upstream's raised amount and remaining sale units
-with current on-chain values. The upstream still owns labels, participant
-counts, and transaction confirmation records; a health check does not certify
-those records.
+The local indexer under `services/local-indexer.mjs` is a read-only boundary,
+not a fixture server. In local mode it returns `503` for launch data until an
+HTTPS upstream is configured. In the explicit Render testnet profile, omitting
+`PRIVA_INDEXER_UPSTREAM` selects direct fixed-price mode: the service reads
+`getPrivaTestnetAccounting`, `getPrivaTestnetQueryState`, and indexed inbound
+`PRVB` messages from the configured TON Center-compatible chain API, then
+builds the single pinned launch record. This direct mode is intentionally
+limited to the deployed testnet launchpad and refuses an unbounded message
+page. Its participant value is a unique inbound-message-source count for
+discovery only; it is not a settlement confirmation. If an upstream is
+configured, the service validates every launch against
+`PRIVA_LAUNCHPAD_ADDRESS` and replaces raised value and remaining sale units
+with current on-chain accounting; the upstream owns labels, participant counts,
+and richer transaction records. A health check does not certify those records.
 
 ## Security boundaries
 

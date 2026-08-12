@@ -22,6 +22,10 @@ services:
         value: https://ef-code.github.io
       - key: PRIVA_LAUNCHPAD_ADDRESS
         value: kQBjcIMOEWAKW11x17u7RpiLuJLJft7x5L4-A6I4pEdGa7zq
+      - key: PRIVA_LAUNCH_ID
+        value: priva-testnet-fixed-v1-20260812
+      - key: PRIVA_LAUNCH_ID_HASH
+        value: "46505882029547571939383076889677913189313818884419477552141134741432015811741"
       - key: ZK_TELE_AUTH_ARTIFACTS_DIR
         value: vendor/zk-tele-auth/artifacts
       - key: PRIVA_MAX_TOKEN_AGE_SEC
@@ -33,10 +37,6 @@ services:
       - key: TELEGRAM_BOT_TOKEN
         sync: false
       - key: PRIVA_ISSUER_SECRET
-        sync: false
-      - key: PRIVA_LAUNCH_ID
-        sync: false
-      - key: PRIVA_LAUNCH_ID_HASH
         sync: false
 
   - type: web
@@ -55,5 +55,21 @@ services:
         value: https://ef-code.github.io
       - key: PRIVA_LAUNCHPAD_ADDRESS
         value: kQBjcIMOEWAKW11x17u7RpiLuJLJft7x5L4-A6I4pEdGa7zq
-      - key: PRIVA_INDEXER_UPSTREAM
-        sync: false
+      - key: PRIVA_CHAIN_API
+        value: https://testnet.toncenter.com/api/v3
+      - key: PRIVA_LAUNCH_ID
+        value: priva-testnet-fixed-v1-20260812
+      - key: PRIVA_LAUNCH_NAME
+        value: Priva Testnet Launchpad Token
+      - key: PRIVA_LAUNCH_SYMBOL
+        value: PRIVA-T
+      - key: PRIVA_LAUNCH_ENDS
+        value: Controlled testnet window
+      - key: PRIVA_PRICE_NANOTON
+        value: "85"
+      - key: PRIVA_TOTAL_SALE_UNITS
+        value: "1000000000"
+      - key: PRIVA_REFUND_GAS_RESERVE_NANOTON
+        value: "50000000"
+      - key: PRIVA_MINT_MESSAGE_VALUE_NANOTON
+        value: "200000000"

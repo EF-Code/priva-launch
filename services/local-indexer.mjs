@@ -4,11 +4,10 @@
  * Read-through indexer boundary.
  *
  * Local mode is loopback-only. Render mode is an explicit public testnet
- * proxy profile and requires an HTTPS upstream; neither mode contains launch
- * fixtures. Without an upstream it returns 503, which keeps the UI read-only
- * instead of inventing chain state. The upstream is expected to be a
- * separately operated indexer that derives records from confirmed TON
- * testnet transactions.
+ * profile. It can either proxy an HTTPS upstream or, when no upstream is
+ * configured, derive the fixed-price testnet discovery record directly from
+ * the deployed launchpad's getters and confirmed TON Center messages. Neither
+ * mode accepts browser-provided launch state or contains fixture records.
  */
 
 import http from 'node:http';
@@ -40,7 +39,6 @@ function loadConfig() {
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('PRIVA_INDEXER_PORT must be a valid TCP port.');
   const corsOrigin = process.env.PRIVA_CORS_ORIGIN?.trim() || 'http://localhost:5173';
   const upstream = process.env.PRIVA_INDEXER_UPSTREAM?.trim() || null;
-  if (publicMode && !upstream) throw new Error('Render indexer requires PRIVA_INDEXER_UPSTREAM over HTTPS.');
   if (upstream) {
     const url = new URL(upstream);
     const local = ['127.0.0.1', '::1', 'localhost'].includes(url.hostname);
@@ -55,9 +53,30 @@ function loadConfig() {
     try { origin = new URL(corsOrigin); } catch { throw new Error('PRIVA_CORS_ORIGIN must be an absolute HTTPS origin.'); }
     if (origin.protocol !== 'https:' || origin.pathname !== '/' || origin.search || origin.hash) throw new Error('Render indexer CORS origin must be an HTTPS origin without a path.');
   }
-  const chainApi = process.env.PRIVA_CHAIN_API?.trim() || 'https://testnet.toncenter.com/api/v3';
+  const chainApiValue = process.env.PRIVA_CHAIN_API?.trim() || (publicMode ? 'https://testnet.toncenter.com/api/v3' : null);
+  const chainApi = chainApiValue ? chainApiValue.replace(/\/$/, '') : null;
   if (publicMode && !/^https:\/\//.test(chainApi)) throw new Error('Render indexer PRIVA_CHAIN_API must use HTTPS.');
-  return Object.freeze({ mode, host, port, corsOrigin, upstream, launchpadRaw, chainApi });
+  const direct = publicMode && !upstream;
+  if (direct) {
+    for (const name of ['PRIVA_LAUNCH_ID', 'PRIVA_LAUNCH_NAME', 'PRIVA_LAUNCH_SYMBOL', 'PRIVA_LAUNCH_ENDS', 'PRIVA_PRICE_NANOTON', 'PRIVA_TOTAL_SALE_UNITS', 'PRIVA_REFUND_GAS_RESERVE_NANOTON', 'PRIVA_MINT_MESSAGE_VALUE_NANOTON']) {
+      if (!process.env[name]?.trim()) throw new Error(`Render direct indexer requires ${name}.`);
+    }
+    if (!validDecimal(process.env.PRIVA_PRICE_NANOTON, { nonZero: true })) throw new Error('PRIVA_PRICE_NANOTON must be a canonical non-zero decimal.');
+    if (!validDecimal(process.env.PRIVA_TOTAL_SALE_UNITS)) throw new Error('PRIVA_TOTAL_SALE_UNITS must be a canonical decimal.');
+    if (!validDecimal(process.env.PRIVA_REFUND_GAS_RESERVE_NANOTON, { nonZero: true })) throw new Error('PRIVA_REFUND_GAS_RESERVE_NANOTON must be a canonical non-zero decimal.');
+    if (!validDecimal(process.env.PRIVA_MINT_MESSAGE_VALUE_NANOTON, { nonZero: true })) throw new Error('PRIVA_MINT_MESSAGE_VALUE_NANOTON must be a canonical non-zero decimal.');
+  }
+  return Object.freeze({
+    mode, host, port, corsOrigin, upstream, launchpadAddress: launchpad || null, launchpadRaw, chainApi, direct,
+    launchId: process.env.PRIVA_LAUNCH_ID?.trim() || null,
+    launchName: process.env.PRIVA_LAUNCH_NAME?.trim() || null,
+    launchSymbol: process.env.PRIVA_LAUNCH_SYMBOL?.trim() || null,
+    launchEnds: process.env.PRIVA_LAUNCH_ENDS?.trim() || null,
+    priceNanoTonPerSaleUnit: process.env.PRIVA_PRICE_NANOTON?.trim() || null,
+    totalSaleUnits: process.env.PRIVA_TOTAL_SALE_UNITS?.trim() || null,
+    refundGasReserveNanoTon: process.env.PRIVA_REFUND_GAS_RESERVE_NANOTON?.trim() || null,
+    mintMessageValueNanoTon: process.env.PRIVA_MINT_MESSAGE_VALUE_NANOTON?.trim() || null,
+  });
 }
 
 function jsonResponse(response, status, payload) {
@@ -96,7 +115,7 @@ async function readLaunchpadAccounting(config) {
   if (!config.chainApi) return null;
   const response = await fetch(`${config.chainApi}/runGetMethod`, {
     method: 'POST',
-    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    headers: { ...chainApiHeaders(config), 'Content-Type': 'application/json' },
     body: JSON.stringify({ address: config.launchpadRaw, method: 'getPrivaTestnetAccounting', stack: [] }),
     signal: AbortSignal.timeout(8000),
   });
@@ -107,6 +126,66 @@ async function readLaunchpadAccounting(config) {
   const values = stack.map((entry) => asDecimal(entry?.value ?? entry?.[1]));
   if (values.some((value) => value === null)) throw Object.assign(new Error('chain API returned a non-numeric launchpad accounting value'), { statusCode: 502 });
   return { soldSaleUnits: values[0], pendingSaleUnits: values[1], acceptedNanoTon: values[2], pendingAcceptedNanoTon: values[3] };
+}
+
+function chainApiHeaders(config) {
+  const headers = { Accept: 'application/json' };
+  if (process.env.PRIVA_CHAIN_API_KEY?.trim()) headers['X-API-Key'] = process.env.PRIVA_CHAIN_API_KEY.trim();
+  return headers;
+}
+
+async function readBuyParticipants(config) {
+  const query = new URLSearchParams({ destination: config.launchpadRaw, opcode: '0x50525642', direction: 'in', limit: '1000', sort: 'asc' });
+  const response = await fetch(`${config.chainApi}/messages?${query}`, { headers: chainApiHeaders(config), signal: AbortSignal.timeout(8000) });
+  if (!response.ok) throw Object.assign(new Error(`chain API returned ${response.status}`), { statusCode: 502 });
+  const body = await response.json();
+  if (!Array.isArray(body?.messages)) throw Object.assign(new Error('chain API returned an invalid message list'), { statusCode: 502 });
+  if (body.messages.length >= 1000) throw Object.assign(new Error('chain message limit reached; participant count is not bounded'), { statusCode: 502 });
+  const sources = new Set();
+  for (const message of body.messages) {
+    const source = message?.source;
+    if (typeof source !== 'string' || source.trim() === '') throw Object.assign(new Error('chain message is missing its source address'), { statusCode: 502 });
+    try { sources.add(Address.parse(source).toRawString()); } catch { sources.add(source); }
+  }
+  return sources.size;
+}
+
+async function buildDirectLaunch(config) {
+  const accounting = await readLaunchpadAccounting(config);
+  const participants = await readBuyParticipants(config);
+  const remaining = BigInt(config.totalSaleUnits) - BigInt(accounting.soldSaleUnits) - BigInt(accounting.pendingSaleUnits);
+  if (remaining < 0n) throw Object.assign(new Error('chain accounting exceeds the configured sale allocation'), { statusCode: 502 });
+  return {
+    id: config.launchId,
+    launchpadAddress: config.launchpadAddress,
+    name: config.launchName,
+    symbol: config.launchSymbol,
+    emoji: '◈',
+    state: 'active',
+    ends: config.launchEnds,
+    raisedTon: Number(accounting.acceptedNanoTon) / 1_000_000_000,
+    participants,
+    priceNanoTonPerSaleUnit: config.priceNanoTonPerSaleUnit,
+    remainingSaleUnits: remaining.toString(),
+    refundGasReserveNanoTon: config.refundGasReserveNanoTon,
+    mintMessageValueNanoTon: config.mintMessageValueNanoTon,
+  };
+}
+
+async function readQueryState(config, queryId) {
+  const response = await fetch(`${config.chainApi}/runGetMethod`, {
+    method: 'POST',
+    headers: { ...chainApiHeaders(config), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ address: config.launchpadRaw, method: 'getPrivaTestnetQueryState', stack: [{ type: 'num', value: queryId }] }),
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!response.ok) throw Object.assign(new Error(`chain API returned ${response.status}`), { statusCode: 502 });
+  const body = await response.json();
+  const stack = body?.stack || body?.result?.stack;
+  const value = stack?.[0]?.value ?? stack?.[0]?.[1];
+  const state = asDecimal(value);
+  if (state === null) throw Object.assign(new Error('chain API returned an invalid query state'), { statusCode: 502 });
+  return state;
 }
 
 function validateLaunches(body, config) {
@@ -152,7 +231,7 @@ export function createLocalIndexerServer(config) {
       return;
     }
     if (request.method === 'GET' && request.url === '/healthz') {
-      jsonResponse(response, 200, { service: 'priva-indexer', mode: config.mode, upstreamConfigured: Boolean(config.upstream) });
+      jsonResponse(response, 200, { service: 'priva-indexer', mode: config.mode, upstreamConfigured: Boolean(config.upstream), chainConfigured: Boolean(config.chainApi) });
       return;
     }
     if (request.method !== 'GET') {
@@ -161,6 +240,10 @@ export function createLocalIndexerServer(config) {
     }
     try {
       if (request.url === '/v1/launches') {
+        if (config.direct) {
+          jsonResponse(response, 200, { launches: [await buildDirectLaunch(config)] });
+          return;
+        }
         const body = await upstreamJson(config, '/v1/launches');
         const launches = validateLaunches(body, config);
         const accounting = await readLaunchpadAccounting(config);
@@ -178,6 +261,10 @@ export function createLocalIndexerServer(config) {
       }
       const match = request.url?.match(/^\/v1\/purchases\/([0-9]+)$/);
       if (match) {
+        if (config.direct) {
+          jsonResponse(response, 200, { queryId: match[1], state: await readQueryState(config, match[1]) });
+          return;
+        }
         const body = await upstreamJson(config, `/v1/purchases/${match[1]}`);
         if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error('upstream returned an invalid purchase record.');
         jsonResponse(response, 200, body);
@@ -196,7 +283,7 @@ export function startLocalIndexer() {
   const server = createLocalIndexerServer(config);
   server.listen(config.port, config.host, () => {
     console.log(`Priva ${config.mode} indexer listening on http://${config.host}:${config.port}`);
-    console.log(`Upstream configured: ${config.upstream ? 'yes' : 'no (read-only 503 until configured)'}`);
+    console.log(`Data source: ${config.direct ? 'direct TON chain' : config.upstream ? 'configured upstream' : 'none (read-only 503)'}`);
   });
   return server;
 }

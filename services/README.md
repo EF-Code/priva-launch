@@ -61,7 +61,7 @@ The keyring launcher does not print, persist, or pass secrets as command-line
 arguments. It exits before starting the gateway when a required item or policy
 field is absent.
 
-## Indexer proxy
+## Indexer
 
 The local indexer is a read-only proxy. It has no fixtures and returns `503`
 until a real upstream indexer is configured:
@@ -73,10 +73,12 @@ export PRIVA_LAUNCHPAD_ADDRESS='the exact deployed testnet launchpad address'
 npm run indexer:local
 ```
 
-The Render blueprint uses `PRIVA_INDEXER_MODE=render`, requires a public HTTPS
-`PRIVA_INDEXER_UPSTREAM`, and binds to the platform `PORT`. It remains a
-read-through proxy: without a real upstream it refuses to start rather than
-serving fabricated launch data.
+The Render blueprint uses `PRIVA_INDEXER_MODE=render` and binds to the platform
+`PORT`. With no `PRIVA_INDEXER_UPSTREAM`, it uses direct fixed-price testnet
+mode: the configured TON Center-compatible chain API supplies launchpad getter
+values and indexed on-chain `PRVB` messages. Set `PRIVA_INDEXER_UPSTREAM` only when a
+richer independently operated indexer is available; the proxy still
+reconciles accounting with the launchpad.
 
 It listens on `http://127.0.0.1:8788` and serves `/v1/launches` and
 `/v1/purchases/<numeric-query-id>` only after validating the upstream response
