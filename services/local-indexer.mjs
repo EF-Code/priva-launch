@@ -145,7 +145,7 @@ async function readBuyParticipants(config) {
   for (const message of body.messages) {
     const source = message?.source;
     if (typeof source !== 'string' || source.trim() === '') throw Object.assign(new Error('chain message is missing its source address'), { statusCode: 502 });
-    try { sources.add(Address.parse(source).toRawString()); } catch { sources.add(source); }
+    try { sources.add(Address.parse(source).toRawString()); } catch { throw Object.assign(new Error('chain message has an invalid source address'), { statusCode: 502 }); }
   }
   return sources.size;
 }
