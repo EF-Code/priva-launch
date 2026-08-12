@@ -1,7 +1,9 @@
 # Contract Architecture
 
-**Status:** Safety scaffold only. The active Tolk contracts reject all inbound
-messages and must not be deployed to receive user funds.
+**Status:** Mainnet architecture boundary. The factory, generic launchpad, and
+migration adapter remain disabled for value-bearing mainnet traffic. The
+separately configured fixed-price testnet launchpad is documented in the
+testnet release package.
 
 This document maps the protocol specification to the future contract boundary.
 It exists so a complete implementation can be built and reviewed in isolated,
@@ -71,7 +73,7 @@ The adapter is a dedicated integration boundary with a pinned address and code
 hash. It accepts migration only from its configured launchpad and only with
 the immutable assets, pool parameters, and LP-recipient policy. Callback and
 bounce handling is part of the launchpad state machine, not a frontend task.
-Its fail-closed scaffold and enablement criteria are in the
+Its disabled boundary and enablement criteria are in the
 [DeDust adapter contract](DEDUST_ADAPTER_CONTRACT.md).
 
 ### Fixed-price testnet profile

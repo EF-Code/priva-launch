@@ -1,6 +1,6 @@
 # Priva Purchase-Authorization Verifier Boundary
 
-**Status:** Compileable testnet-only proof-checking candidate. It verifies a
+**Status:** Compileable testnet proof-verification boundary. It verifies a
 complete Groth16 envelope synchronously, but it is **not** a purchase
 authorizer and must not receive user funds.
 

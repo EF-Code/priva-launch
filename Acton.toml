@@ -1,7 +1,7 @@
 [package]
 name = "priva"
 version = "1.0.0"
-description = "Priva protocol-boundary scaffolds in Tolk; not deployable"
+description = "Priva TON protocol boundaries and controlled testnet launchpad"
 
 [import-mappings]
 acton = ".acton"

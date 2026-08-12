@@ -1,7 +1,7 @@
 {
   "name": "priva",
   "version": "1.0.0",
-  "description": "Anonymous Anti-Sniper Memecoin Launchpad on TON powered by zk-tele-auth Zero-Knowledge Proofs",
+  "description": "Privacy-preserving fixed-price token launch interface for TON testnet",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -40,13 +40,10 @@
   "keywords": [
     "ton",
     "the-open-network",
-    "memecoin",
     "launchpad",
-    "bonding-curve",
     "zero-knowledge",
     "zk-tele-auth",
     "privacy",
-    "anti-sniper",
     "tolk"
   ],
   "author": "ef-code",

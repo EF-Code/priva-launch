@@ -1,7 +1,7 @@
 # Gateway and Indexer Service Contract
 
-**Status:** Interface specification. A loopback-only development adapter is
-available under `services/`; no public endpoint is configured in the demo.
+**Status:** Service contract. A loopback adapter is available under
+`services/`; public endpoints are supplied only by a reviewed runtime manifest.
 
 The local adapter is intentionally not a deployment endpoint. It requires
 `PRIVA_GATEWAY_MODE=local`, binds to `127.0.0.1`, and refuses missing operator

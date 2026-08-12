@@ -12,7 +12,7 @@
   </head>
   <body>
     <div class="environment-banner" role="status">
-      <span class="signal"></span><strong>TESTNET PREVIEW</strong>
+      <span class="signal"></span><strong>TESTNET ENVIRONMENT</strong>
       <span>Wallet actions stay disabled until a reviewed testnet deployment manifest is loaded.</span>
       <a href="docs/RELEASE_READINESS.md">Release controls</a>
     </div>
@@ -30,7 +30,7 @@
         <h1>Launch with a fair<br /><em>first block.</em></h1>
         <p>Priva is a testnet launch interface for fixed-supply TON launches. Every eventual purchase will be quote-bound, allocation-capped, and confirmed from chain data—not browser state.</p>
         <div class="hero-actions"><a class="button button-primary" href="#launches">Explore testnet launches <span>→</span></a><button class="button button-quiet" id="openReadinessBtn" type="button">View readiness</button></div>
-        <dl class="hero-stats"><div><dt>85 TON</dt><dd>raise target template</dd></div><div><dt>0%</dt><dd>protocol fee, v1</dd></div><div><dt>5%</dt><dd>maximum identity cap</dd></div></dl>
+        <dl class="hero-stats"><div><dt>85 TON</dt><dd>fixed sale allocation</dd></div><div><dt>0%</dt><dd>protocol fee, v1</dd></div><div><dt>5%</dt><dd>maximum identity cap</dd></div></dl>
       </section>
 
       <section class="shell status-grid" id="security">
@@ -40,7 +40,7 @@
       </section>
 
       <section class="shell launches" id="launches">
-        <div class="section-heading"><div><div class="eyebrow">TESTNET DISCOVERY</div><h2>Launches under observation</h2></div><p>Only records from the reviewed indexer are rendered. Without one, this section stays empty and read-only.</p></div>
+        <div class="section-heading"><div><div class="eyebrow">AVAILABLE LAUNCHES</div><h2>Testnet launches</h2></div><p>Launch data comes from the reviewed indexer. Until it is configured, this section remains empty and read-only.</p></div>
         <div class="toolbar"><label class="search"><span>⌕</span><input id="searchInput" type="search" placeholder="Search name or ticker" autocomplete="off" /></label><div class="filters" role="group" aria-label="Launch filter"><button data-filter="all" class="selected">All</button><button data-filter="active">Active</button><button data-filter="closing">Closing soon</button></div></div>
         <div class="launch-grid" id="launchGrid" aria-live="polite"></div>
       </section>
@@ -50,10 +50,10 @@
         <ol><li><span>01</span><div><strong>Verify eligibility</strong><p>The gateway validates Telegram data and produces a policy-bound authorization.</p></div></li><li><span>02</span><div><strong>Review an exact quote</strong><p>Recipient, expiry, cap and max value are visible before wallet approval.</p></div></li><li><span>03</span><div><strong>Confirm independently</strong><p>Priva matches the finalized transaction to its decoded query ID and destination.</p></div></li></ol>
       </section>
     </main>
-    <footer class="shell footer"><a class="wordmark" href="#top"><span>p</span>priva</a><p>Testnet preview. Wallet actions require a reviewed manifest and explicit user approval.</p><a href="docs/PROTOCOL_SPEC.md">Protocol specification ↗</a></footer>
+    <footer class="shell footer"><a class="wordmark" href="#top"><span>p</span>priva</a><p>Testnet release candidate. Wallet actions require a reviewed manifest and explicit user approval.</p><a href="docs/PROTOCOL_SPEC.md">Protocol specification ↗</a></footer>
 
     <dialog id="purchaseDialog"><form id="purchaseForm" class="purchase-form"><button class="dialog-close" id="purchaseCancel" type="button" aria-label="Close">×</button><div class="eyebrow">REVIEWED TESTNET PURCHASE</div><h2 id="purchaseLaunchName">Launch</h2><p id="purchaseLaunchId"></p><label for="purchaseUnits">Sale units</label><input id="purchaseUnits" type="number" min="1" step="1" inputmode="numeric" autocomplete="off" /><p id="purchaseQuote" class="purchase-quote"></p><p id="purchaseStatus" class="purchase-status">Connect your testnet wallet, then request a Telegram-bound proof.</p><div class="dialog-actions"><button class="button button-quiet" id="purchaseCancelAction" type="button">Cancel</button><button class="button button-primary" id="purchaseSubmit" type="submit">Request proof and review</button></div></form></dialog>
-    <dialog id="readinessDialog"><form method="dialog"><button class="dialog-close" aria-label="Close">×</button><div class="eyebrow">TESTNET ENABLEMENT</div><h2 id="dialogTitle">Deployment manifest required</h2><p id="dialogText">The UI will remain read-only until a signed, reviewed testnet manifest declares the fixed-price launchpad, verifier binding, gateway, indexer, code hashes, TonConnect origin, and explicit migration policy.</p><div class="checklist"><div><i>✓</i> No user-provided addresses</div><div><i>✓</i> No optimistic balance changes</div><div><i>✓</i> No automatic transaction submission</div></div><button class="button button-primary">Understood</button></form></dialog>
+    <dialog id="readinessDialog"><form method="dialog"><button class="dialog-close" aria-label="Close">×</button><div class="eyebrow">TESTNET ENABLEMENT</div><h2 id="dialogTitle">Deployment manifest required</h2><p id="dialogText">The UI will remain read-only until a reviewed testnet manifest declares the fixed-price launchpad, verifier binding, gateway, indexer, code hashes, TonConnect origin, and explicit migration policy.</p><div class="checklist"><div><i>✓</i> No user-provided addresses</div><div><i>✓</i> No optimistic balance changes</div><div><i>✓</i> No automatic transaction submission</div></div><button class="button button-primary">Understood</button></form></dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script type="module" src="src/app.js"></script>
   </body>

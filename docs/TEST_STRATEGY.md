@@ -1,20 +1,20 @@
 # Test Strategy and Coverage Gates
 
-**Current coverage:** JavaScript reference-model tests only. The passing tests
-do not prove TVM execution, TEP-74 interoperability, Groth16 verification, or
-DeDust behavior.
+**Current coverage:** Reference-model, emulator, transport, and selected
+contract tests. Passing tests do not by themselves prove TVM execution,
+TEP-74 interoperability, Groth16 production assurance, or DeDust behavior.
 
 ## Required layers
 
 | Layer | Required evidence | Current status |
 | --- | --- | --- |
 | Settlement oracle | Integer quote, supply, excess, identity-cap boundaries | Present in `tests/settlement.test.cjs` |
-| Tolk unit tests | Storage serialization, every opcode, role checks, malformed cells | Not implemented |
-| Contract integration | Factory/launchpad/jetton/verifier/adapter message traces | Not implemented |
-| ZK tests | Forgery, issuer, domain, launch, recipient, expiry, and replay rejection | Not implemented |
-| Property/fuzz tests | Value/supply conservation and state-transition invariants | Not implemented |
-| Testnet | Full lifecycle and bounce traces against pinned deployments | Not implemented |
-| Independent audit | Findings, fixes, and rerun evidence | Not started |
+| Tolk unit tests | Storage serialization, every opcode, role checks, malformed cells | Pending |
+| Contract integration | Factory/launchpad/jetton/verifier/adapter message traces | Pending |
+| ZK tests | Forgery, issuer, domain, launch, recipient, expiry, and replay rejection | Pending |
+| Property/fuzz tests | Value/supply conservation and state-transition invariants | Pending |
+| Testnet | Full lifecycle and bounce traces against pinned deployments | Pending |
+| Independent audit | Findings, fixes, and rerun evidence | Release gate |
 
 ## Mandatory properties
 

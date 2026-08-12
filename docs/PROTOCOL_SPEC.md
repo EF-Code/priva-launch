@@ -1,7 +1,8 @@
 # Priva Protocol Specification
 
-**Status:** Draft 0.1 — implementation-blocking design document  
-**Scope:** A non-custodial TON token-launch protocol. This document supersedes all production claims in the current demo UI and contract sketches.  
+**Status:** Version 0.1 design specification and release gate
+**Scope:** A non-custodial TON token-launch protocol. This document defines the
+behavioral requirements for any production deployment.
 **Mainnet status:** Not approved. No contract may accept user value until this specification is implemented, tested, audited, and deployed with a published configuration manifest.
 
 ## 1. Goals and non-goals

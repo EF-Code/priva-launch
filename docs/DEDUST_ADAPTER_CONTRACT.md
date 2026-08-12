@@ -1,6 +1,7 @@
 # DeDust Migration Adapter Contract
 
-**Status:** Fail-closed scaffold; it cannot receive a live migration.
+**Status:** Migration boundary disabled in the current release; it cannot
+receive a live migration.
 
 The adapter is a separate contract so a launchpad never accepts a DEX address,
 pool parameter, LP recipient, or destination from a browser, creator, or
@@ -30,7 +31,7 @@ the adapter callback or bounce before it marks itself `Migrated`.
 
 ## Exit criteria
 
-Before this contract changes from fail-closed, add testnet traces for successful
+Before this boundary is enabled, add testnet traces for successful
 pool creation/deposit, an existing-pool path, every callback, and every bounced
 outbound message. Independently verify the DeDust message schema and code hashes
 against the target deployment.

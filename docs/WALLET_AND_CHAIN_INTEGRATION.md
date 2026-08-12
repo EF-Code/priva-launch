@@ -1,11 +1,11 @@
 # Wallet and Chain Integration Gate
 
-**Status:** Fail-closed testnet adapter implemented; the shipped build remains
-demo-only until every item below is complete. `src/ton-connect.js` creates the
-TonConnect UI lazily from a reviewed manifest, `src/ton-transaction.js` builds
-the canonical buy cell, and `src/ton-wallet.js` permits only one destination
-and the testnet network ID. No manifest is currently injected, so no wallet
-connection or transfer is enabled.
+**Status:** Testnet integration boundary implemented. `src/ton-connect.js`
+creates the TonConnect UI lazily from a reviewed manifest,
+`src/ton-transaction.js` builds the canonical buy cell, and
+`src/ton-wallet.js` permits only one destination and the testnet network ID.
+No runtime manifest is currently injected, so wallet connection and transfers
+remain disabled.
 
 ## Required reviewed deployment manifest
 
@@ -49,8 +49,8 @@ an RPC request as a transfer.
 5. A rejected, expired, bounced, or missing transaction leaves the UI and local
    state unchanged.
 
-`src/deployment-config.js` intentionally defaults to an incomplete `demo`
-configuration. A deployment host may inject a reviewed manifest through the
+`src/deployment-config.js` intentionally defaults to an unconfigured state. A
+deployment host may inject a reviewed manifest through the
 build-time `__PRIVA_TESTNET_MANIFEST__` value; missing, malformed, or
 unreviewed values fall back to read-only mode.
 

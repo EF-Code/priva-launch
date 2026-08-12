@@ -1,7 +1,8 @@
 # zk-tele-auth Integration Contract
 
-**Status:** Design locked; implementation blocked until Priva-specific proving
-artifacts and an audited verifier are generated.  
+**Status:** Gateway integration contract locked. The testnet profile uses
+Priva-specific proving artifacts; production ceremony and verifier assurance
+remain release gates.
 **Reference implementation:** `/home/wellington/stuff/zk-tele-auth` at commit
 `e50efa2` (inspected locally on 2026-08-07).  
 **Trust model:** Gateway-attested Telegram credential plus an on-chain Groth16
