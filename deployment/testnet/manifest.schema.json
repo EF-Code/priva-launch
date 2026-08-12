@@ -41,6 +41,32 @@
     "metadataUrl": { "type": "string", "pattern": "^https://" },
     "codeHashes": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{64}$" } },
     "circuit": { "type": "object", "additionalProperties": false, "required": ["version", "verificationKeyHash"], "properties": { "version": { "const": 1 }, "verificationKeyHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" } } },
-    "dex": { "type": "object", "additionalProperties": false, "required": ["kind", "sourceRevision", "nativeVaultAddress", "jettonVaultAddress", "poolAddress", "codeHashes"], "properties": { "kind": { "const": "dedust-v2" }, "sourceRevision": { "type": "string", "pattern": "^[a-f0-9]{40}$" }, "nativeVaultAddress": { "type": "string", "pattern": "^(?:EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$" }, "jettonVaultAddress": { "type": "string", "pattern": "^(?:EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$" }, "poolAddress": { "type": "string", "pattern": "^(?:EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$" }, "codeHashes": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{64}$" } } } }
+    "dex": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "migration", "reason"],
+          "properties": {
+            "kind": { "const": "none" },
+            "migration": { "const": "disabled" },
+            "reason": { "const": "fixed-price-testnet-sale" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "sourceRevision", "nativeVaultAddress", "jettonVaultAddress", "poolAddress", "codeHashes"],
+          "properties": {
+            "kind": { "const": "dedust-v2" },
+            "sourceRevision": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+            "nativeVaultAddress": { "type": "string", "pattern": "^(?:EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$" },
+            "jettonVaultAddress": { "type": "string", "pattern": "^(?:EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$" },
+            "poolAddress": { "type": "string", "pattern": "^(?:EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$" },
+            "codeHashes": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{64}$" } }
+          }
+        }
+      ]
+    }
   }
 }
