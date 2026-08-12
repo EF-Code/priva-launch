@@ -22,14 +22,32 @@ function validateTestnetManifest(manifest) {
   if (!sha256.test(manifest.codeHashes.launchpad || '')) throw new Error('codeHashes.launchpad must pin the deployed launchpad code hash.');
   validateVerifier(manifest.verifier, manifest.codeHashes.launchpad);
   if (!manifest.circuit || manifest.circuit.version !== 1 || !sha256.test(manifest.circuit.verificationKeyHash || '')) throw new Error('Circuit must pin v1 verificationKeyHash.');
-  if (!manifest.dex || manifest.dex.kind !== 'dedust-v2' || !revision.test(manifest.dex.sourceRevision || '')) throw new Error('DEX must pin DeDust v2 and its source revision.');
-  for (const field of ['nativeVaultAddress', 'jettonVaultAddress', 'poolAddress']) {
-    if (typeof manifest.dex[field] !== 'string' || manifest.dex[field].trim() === '') throw new Error(`DEX is missing ${field}.`);
-    if (!tonAddress.test(manifest.dex[field])) throw new Error(`DEX ${field} must be a friendly TON address.`);
-  }
-  if (!manifest.dex.codeHashes || typeof manifest.dex.codeHashes !== 'object' || Object.keys(manifest.dex.codeHashes).length === 0) throw new Error('DEX codeHashes must be non-empty.');
-  for (const [name, value] of Object.entries(manifest.dex.codeHashes)) if (!sha256.test(value)) throw new Error(`Invalid DEX SHA-256 code hash for ${name}.`);
+  validateDex(manifest.dex);
   return Object.freeze({ ...manifest });
+}
+
+/**
+ * A fixed-price testnet sale is intentionally allowed to ship without a DEX
+ * migration target. This is an explicit policy choice, not a missing field:
+ * the launchpad must not claim graduated trading or send value to an
+ * unverified adapter. DeDust remains supported only when every downstream
+ * address, hash, and source revision is present.
+ */
+function validateDex(dex) {
+  if (!dex || typeof dex !== 'object' || Array.isArray(dex)) throw new Error('Missing DEX descriptor.');
+  if (dex.kind === 'none') {
+    for (const field of Object.keys(dex)) if (!['kind', 'migration', 'reason'].includes(field)) throw new Error(`No-DEX profile cannot declare ${field}.`);
+    if (dex.migration !== 'disabled') throw new Error('A no-DEX testnet profile must set migration to disabled.');
+    if (dex.reason !== 'fixed-price-testnet-sale') throw new Error('A no-DEX testnet profile must use reason fixed-price-testnet-sale.');
+    return;
+  }
+  if (dex.kind !== 'dedust-v2' || !revision.test(dex.sourceRevision || '')) throw new Error('DEX must pin DeDust v2 and its source revision.');
+  for (const field of ['nativeVaultAddress', 'jettonVaultAddress', 'poolAddress']) {
+    if (typeof dex[field] !== 'string' || dex[field].trim() === '') throw new Error(`DEX is missing ${field}.`);
+    if (!tonAddress.test(dex[field])) throw new Error(`DEX ${field} must be a friendly TON address.`);
+  }
+  if (!dex.codeHashes || typeof dex.codeHashes !== 'object' || Object.keys(dex.codeHashes).length === 0) throw new Error('DEX codeHashes must be non-empty.');
+  for (const [name, value] of Object.entries(dex.codeHashes)) if (!sha256.test(value)) throw new Error(`Invalid DEX SHA-256 code hash for ${name}.`);
 }
 
 /**
@@ -70,4 +88,4 @@ if (require.main === module) {
   console.log(`✓ Testnet manifest is structurally valid (${digest})`);
 }
 
-module.exports = { validateTestnetManifest, readManifest, validateVerifier };
+module.exports = { validateTestnetManifest, readManifest, validateVerifier, validateDex };

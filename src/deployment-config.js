@@ -45,13 +45,7 @@ export function parseTestnetManifest(manifest) {
   if (!sha256.test(manifest.codeHashes.launchpad || '')) throw new Error('Deployment manifest must pin codeHashes.launchpad.');
   validateVerifier(manifest.verifier, manifest.codeHashes.launchpad);
   if (!manifest.circuit || manifest.circuit.version !== 1 || !sha256.test(manifest.circuit.verificationKeyHash || '')) throw new Error('Deployment manifest must pin the version-1 verification key hash.');
-  if (!manifest.dex || manifest.dex.kind !== 'dedust-v2' || !/^[a-f0-9]{40}$/.test(manifest.dex.sourceRevision || '')) throw new Error('Deployment manifest must pin the reviewed DeDust v2 source revision.');
-  for (const field of ['nativeVaultAddress', 'jettonVaultAddress', 'poolAddress']) {
-    if (typeof manifest.dex[field] !== 'string' || manifest.dex[field].trim() === '') throw new Error(`Deployment manifest DEX is missing ${field}.`);
-    if (!tonAddress.test(manifest.dex[field])) throw new Error(`Deployment manifest DEX ${field} must be a friendly TON address.`);
-  }
-  if (!manifest.dex.codeHashes || typeof manifest.dex.codeHashes !== 'object' || Object.keys(manifest.dex.codeHashes).length === 0) throw new Error('Deployment manifest DEX must pin code hashes.');
-  for (const [name, digest] of Object.entries(manifest.dex.codeHashes)) if (!sha256.test(digest)) throw new Error(`Invalid DEX SHA-256 code hash for ${name}.`);
+  validateDex(manifest.dex);
   return Object.freeze({ mode: 'testnet', ...manifest });
 }
 
@@ -71,6 +65,7 @@ export const deploymentConfig = loadRuntimeDeployment();
 
 export function getDeploymentStatus(config = deploymentConfig) {
   if (config.manifestError) return { enabled: false, label: 'Manifest rejected; read-only mode' };
+  if (config.mode === 'testnet' && config.dex?.kind === 'none') return { enabled: true, label: 'Reviewed fixed-price testnet manifest loaded' };
   return config.mode === 'testnet' ? { enabled: true, label: 'Reviewed testnet manifest loaded' } : { enabled: false, label: 'Manifest required' };
 }
 
@@ -103,6 +98,23 @@ function validateVerifier(verifier, launchpadCodeHash) {
     return;
   }
   throw new Error('Deployment manifest verifier mode must be "inlined" or "standalone".');
+}
+
+function validateDex(dex) {
+  if (!dex || typeof dex !== 'object' || Array.isArray(dex)) throw new Error('Deployment manifest is missing DEX descriptor.');
+  if (dex.kind === 'none') {
+    for (const field of Object.keys(dex)) if (!['kind', 'migration', 'reason'].includes(field)) throw new Error(`Deployment manifest no-DEX profile cannot declare ${field}.`);
+    if (dex.migration !== 'disabled') throw new Error('Deployment manifest no-DEX profile must set migration to disabled.');
+    if (dex.reason !== 'fixed-price-testnet-sale') throw new Error('Deployment manifest no-DEX profile must use reason fixed-price-testnet-sale.');
+    return;
+  }
+  if (dex.kind !== 'dedust-v2' || !revision.test(dex.sourceRevision || '')) throw new Error('Deployment manifest must pin the reviewed DeDust v2 source revision.');
+  for (const field of ['nativeVaultAddress', 'jettonVaultAddress', 'poolAddress']) {
+    if (typeof dex[field] !== 'string' || dex[field].trim() === '') throw new Error(`Deployment manifest DEX is missing ${field}.`);
+    if (!tonAddress.test(dex[field])) throw new Error(`Deployment manifest DEX ${field} must be a friendly TON address.`);
+  }
+  if (!dex.codeHashes || typeof dex.codeHashes !== 'object' || Object.keys(dex.codeHashes).length === 0) throw new Error('Deployment manifest DEX must pin code hashes.');
+  for (const [name, digest] of Object.entries(dex.codeHashes)) if (!sha256.test(digest)) throw new Error(`Invalid DEX SHA-256 code hash for ${name}.`);
 }
 
 export function requireLiveDeployment(config = deploymentConfig) {

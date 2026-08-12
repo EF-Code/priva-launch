@@ -18,8 +18,16 @@ async function runDeploymentConfigTests() {
   const standalone = parseTestnetManifest({ ...manifest, verifier: { mode: 'standalone', address, codeHash: 'c'.repeat(64) } });
   assert.equal(standalone.verifier.mode, 'standalone');
   assert.throws(() => parseTestnetManifest({ ...manifest, verifier: { mode: 'standalone', address: 'EQtest', codeHash: 'c'.repeat(64) } }), /standalone verifier address/);
+  const noDex = parseTestnetManifest({ ...manifest, dex: { kind: 'none', migration: 'disabled', reason: 'fixed-price-testnet-sale' } });
+  assert.equal(noDex.dex.kind, 'none');
+  assert.equal(noDex.dex.migration, 'disabled');
+  assert.equal(getDeploymentStatus(noDex).label, 'Reviewed fixed-price testnet manifest loaded');
+  assert.throws(() => parseTestnetManifest({ ...manifest, dex: { kind: 'none', migration: 'enabled', reason: 'fixed-price-testnet-sale' } }), /migration to disabled/);
+  assert.throws(() => parseTestnetManifest({ ...manifest, dex: { kind: 'none', migration: 'disabled', reason: 'other' } }), /fixed-price-testnet-sale/);
+  assert.throws(() => parseTestnetManifest({ ...manifest, dex: { kind: 'none', migration: 'disabled', reason: 'fixed-price-testnet-sale', poolAddress: address } }), /cannot declare poolAddress/);
   assert.deepEqual(validateTestnetManifest(manifest), manifest);
   assert.throws(() => validateTestnetManifest({ ...manifest, dex: undefined }), /DEX/);
+  assert.deepEqual(validateTestnetManifest({ ...manifest, dex: { kind: 'none', migration: 'disabled', reason: 'fixed-price-testnet-sale' } }).dex, { kind: 'none', migration: 'disabled', reason: 'fixed-price-testnet-sale' });
   console.log('✅ Testnet manifest validation tests passed');
 }
 
