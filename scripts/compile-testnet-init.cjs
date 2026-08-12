@@ -17,6 +17,10 @@ const walletLibraryCell = require('@ton/core').Cell.fromBoc(Buffer.from(walletAr
 const codeCellHash = String(buildArtifact.hash || '').toLowerCase();
 if (!/^[a-f0-9]{64}$/.test(codeCellHash)) throw new Error('Acton build artifact has no valid launchpad code-cell hash. Run acton build first.');
 if (manifest.launchpadCodeSha256 !== codeCellHash) throw new Error('Manifest launchpadCodeSha256 does not match the current Acton build artifact.');
+const verifierSourcePath = path.join(root, 'vendor', 'zk-tele-auth', 'contracts', 'priva_purchase_auth_verifier.tolk');
+const verifierSourceSha256 = require('crypto').createHash('sha256').update(fs.readFileSync(verifierSourcePath)).digest('hex');
+if (manifest.verifier?.mode !== 'inlined' || manifest.verifier.sourceSha256 !== verifierSourceSha256) throw new Error('Manifest inlined verifier sourceSha256 does not match the pinned verifier source.');
+if (manifest.verifier.launchpadCodeSha256 !== codeCellHash) throw new Error('Manifest inlined verifier launchpadCodeSha256 does not match the launchpad artifact.');
 if (manifest.settlementMinterCodeSha256 !== minterArtifact.codeCellHash) throw new Error('Manifest settlementMinterCodeSha256 does not match the settlement-minter artifact.');
 if (manifest.settlementMinterCallbackOpcode !== minterArtifact.callback.opcode) throw new Error('Manifest settlementMinterCallbackOpcode does not match the settlement-minter artifact.');
 if (manifest.settlementMinterWalletCodeSha256 !== walletLibraryCellHash) throw new Error('Manifest settlementMinterWalletCodeSha256 does not match the pinned wallet library artifact.');

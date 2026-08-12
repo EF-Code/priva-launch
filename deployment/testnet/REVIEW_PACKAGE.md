@@ -8,7 +8,8 @@ deployment. Do not copy values from `tests/fixtures/` and do not use
 
 The release authority creates these files after deployment:
 
-* `reviewed-init.json` — exact launchpad StateInit inputs and immutable policy;
+* `reviewed-init.json` — exact launchpad StateInit inputs, immutable policy,
+  and the inlined verifier source/code binding;
 * `reviewed-manifest.json` — deployed addresses, endpoints, code hashes, and
   testnet-only runtime configuration;
 * `reviewed-release-payload.json` — canonical compact JSON binding both

@@ -12,8 +12,11 @@ connection or transfer is enabled.
 The production build receives an immutable manifest containing:
 
 - manifest version and target network/workchain;
-- verified factory, launchpad, verifier, jetton-minter, and adapter addresses;
-- factory, launchpad, verifier, jetton-master, wallet, and adapter code hashes;
+- verified factory, launchpad, jetton-minter, and adapter addresses, plus a
+  verifier descriptor. The current launchpad embeds the verifier core and
+  therefore has no separate verifier address;
+- factory, launchpad, jetton-master, wallet, adapter, and inlined-verifier
+  source/code hashes;
 - the trusted TonConnect manifest URL and application origin; and
 - the ZK circuit/version and issuer-key commitment matching the deployed
   verifier.

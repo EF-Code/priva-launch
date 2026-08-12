@@ -21,6 +21,11 @@ The verification key and proving key are development artifacts, not a completed
 ceremony or an audited mainnet dependency. A release manifest must pin the
 reviewed replacement artifact hashes.
 
+The testnet runtime manifest records this boundary as
+`verifier.mode: "inlined"` with the verifier source digest and the deployed
+launchpad code hash. It must not put a fabricated address beside this artifact:
+the launchpad imports and executes the pure verifier core synchronously.
+
 ## Exact public-input ABI
 
 The generated verifier exposes outputs first, followed by the circuit's

@@ -3,6 +3,11 @@
   "status": "reviewed",
   "sourceRevision": "0511c5e910f1a9bb66493fa73961c68f2ca310b2",
   "launchpadCodeSha256": "0b00311a28f6955de08cd67a75edeaf04f44db5f27a29a810ce63da69343d587",
+  "verifier": {
+    "mode": "inlined",
+    "sourceSha256": "a0e8b8a000e54c3e85f11726545d07f736c2cb2ae59571ca952d95eea50b2a20",
+    "launchpadCodeSha256": "0b00311a28f6955de08cd67a75edeaf04f44db5f27a29a810ce63da69343d587"
+  },
   "settlementMinterCodeSha256": "12735d631a291d42da0ea5895cf274f66af22d0c22f0229751296b3c818b5f5d",
   "settlementMinterWalletCodeSha256": "8d28ea421b77e805fea52acf335296499f03aec8e9fd21ddb5f2564aa65c48de",
   "settlementMinterUpstreamRevision": "d55f228edb0eb477cb4845d67e0dacc6489c6b57",

@@ -4,7 +4,11 @@
   "status": "reviewed",
   "sourceRevision": "0123456789abcdef0123456789abcdef01234567",
   "launchpadAddress": "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c",
-  "verifierAddress": "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c",
+  "verifier": {
+    "mode": "inlined",
+    "sourceSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "launchpadCodeHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
   "jettonMinterAddress": "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c",
   "gatewayUrl": "https://gateway.example.test",
   "indexerUrl": "https://indexer.example.test",

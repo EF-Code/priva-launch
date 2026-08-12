@@ -25,6 +25,10 @@ if (manifest.network !== 'testnet') throw new Error('Initialization manifest net
 if (manifest.status !== 'reviewed') throw new Error('Initialization manifest must have status "reviewed".');
 if (!revision.test(manifest.sourceRevision || '')) throw new Error('sourceRevision must be a full Git SHA.');
 if (!sha256.test(manifest.launchpadCodeSha256 || '')) throw new Error('launchpadCodeSha256 must be a SHA-256 digest.');
+if (!manifest.verifier || manifest.verifier.mode !== 'inlined') throw new Error('Initialization manifest must pin an inlined verifier descriptor.');
+if (!sha256.test(manifest.verifier.sourceSha256 || '')) throw new Error('verifier.sourceSha256 must be a SHA-256 digest.');
+if (!sha256.test(manifest.verifier.launchpadCodeSha256 || '')) throw new Error('verifier.launchpadCodeSha256 must be a SHA-256 digest.');
+if (manifest.verifier.launchpadCodeSha256 !== manifest.launchpadCodeSha256) throw new Error('verifier.launchpadCodeSha256 must equal launchpadCodeSha256.');
 if (!sha256.test(manifest.settlementMinterCodeSha256 || '')) throw new Error('settlementMinterCodeSha256 must be a SHA-256 digest.');
 if (!sha256.test(manifest.settlementMinterWalletCodeSha256 || '')) throw new Error('settlementMinterWalletCodeSha256 must be a SHA-256 digest.');
 if (manifest.settlementMinterUpstreamRevision !== 'd55f228edb0eb477cb4845d67e0dacc6489c6b57') throw new Error('settlementMinterUpstreamRevision must pin the reviewed upstream revision.');

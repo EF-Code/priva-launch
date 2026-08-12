@@ -8,6 +8,18 @@
     "url": "https://ef-code.github.io/priva-launch/testnet/v1/metadata.json",
     "sha256": "e0c4409d35ba05df5d9b6845a6ad02cc7bf851ca659fa2367834d5739ed9c381"
   },
+  "verifier": {
+    "mode": "inlined",
+    "sourceSha256": "a0e8b8a000e54c3e85f11726545d07f736c2cb2ae59571ca952d95eea50b2a20",
+    "launchpadCodeHash": "0b00311a28f6955de08cd67a75edeaf04f44db5f27a29a810ce63da69343d587",
+    "note": "The launchpad imports and executes the pure verifier core synchronously; no separate verifier address exists."
+  },
+  "tonConnect": {
+    "appUrl": "https://ef-code.github.io/priva-launch",
+    "manifestUrl": "https://ef-code.github.io/priva-launch/tonconnect-manifest.json",
+    "origin": "https://ef-code.github.io",
+    "manifestSha256": "4c6e06c592da86927968adeb9ea73625e890f3fbd9a33b20756826038baa57bc"
+  },
   "settlementMinter": {
     "address": "kQCXHjN-EPS1D9k9TF7VlmRhWShBEXeRVKbuMz32zy8rKSb1",
     "rawAddress": "0:971e337e10f4b50fd93d4c5ed596646159284111779154a6ee333df6cf2f2b29",

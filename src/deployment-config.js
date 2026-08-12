@@ -11,7 +11,7 @@ const demoDeploymentConfig = Object.freeze({
   manifestVersion: null,
   sourceRevision: null,
   launchpadAddress: null,
-  verifierAddress: null,
+  verifier: null,
   jettonMinterAddress: null,
   gatewayUrl: null,
   indexerUrl: null,
@@ -31,10 +31,10 @@ export function parseTestnetManifest(manifest) {
   if (manifest.network !== 'testnet') throw new Error('Only a reviewed testnet manifest may enable this interface.');
   if (manifest.status !== 'reviewed') throw new Error('Deployment manifest must have status "reviewed".');
   if (!revision.test(manifest.sourceRevision || '')) throw new Error('Deployment manifest sourceRevision must be a full Git SHA.');
-  for (const field of ['version', 'launchpadAddress', 'verifierAddress', 'jettonMinterAddress', 'gatewayUrl', 'indexerUrl', 'tonConnectManifestUrl', 'metadataUrl']) {
+  for (const field of ['version', 'launchpadAddress', 'jettonMinterAddress', 'gatewayUrl', 'indexerUrl', 'tonConnectManifestUrl', 'metadataUrl']) {
     if (typeof manifest[field] !== 'string' || manifest[field].trim() === '') throw new Error(`Deployment manifest is missing ${field}.`);
   }
-  for (const field of ['launchpadAddress', 'verifierAddress', 'jettonMinterAddress']) if (!tonAddress.test(manifest[field])) throw new Error(`Deployment manifest ${field} must be a friendly TON address.`);
+  for (const field of ['launchpadAddress', 'jettonMinterAddress']) if (!tonAddress.test(manifest[field])) throw new Error(`Deployment manifest ${field} must be a friendly TON address.`);
   for (const endpoint of ['gatewayUrl', 'indexerUrl', 'tonConnectManifestUrl', 'metadataUrl']) {
     let url;
     try { url = new URL(manifest[endpoint]); } catch { throw new Error(`Deployment manifest ${endpoint} must be an HTTPS URL.`); }
@@ -42,6 +42,8 @@ export function parseTestnetManifest(manifest) {
   }
   if (!manifest.codeHashes || typeof manifest.codeHashes !== 'object' || Array.isArray(manifest.codeHashes) || Object.keys(manifest.codeHashes).length === 0) throw new Error('Deployment manifest must pin non-empty codeHashes.');
   for (const [name, digest] of Object.entries(manifest.codeHashes)) if (!sha256.test(digest)) throw new Error(`Invalid SHA-256 code hash for ${name}.`);
+  if (!sha256.test(manifest.codeHashes.launchpad || '')) throw new Error('Deployment manifest must pin codeHashes.launchpad.');
+  validateVerifier(manifest.verifier, manifest.codeHashes.launchpad);
   if (!manifest.circuit || manifest.circuit.version !== 1 || !sha256.test(manifest.circuit.verificationKeyHash || '')) throw new Error('Deployment manifest must pin the version-1 verification key hash.');
   if (!manifest.dex || manifest.dex.kind !== 'dedust-v2' || !/^[a-f0-9]{40}$/.test(manifest.dex.sourceRevision || '')) throw new Error('Deployment manifest must pin the reviewed DeDust v2 source revision.');
   for (const field of ['nativeVaultAddress', 'jettonVaultAddress', 'poolAddress']) {
@@ -81,9 +83,26 @@ export function isLiveDeploymentReady(config = deploymentConfig) {
   return config.mode === 'live' &&
     typeof config.manifestVersion === 'string' &&
     typeof config.launchpadAddress === 'string' &&
-    typeof config.verifierAddress === 'string' &&
+    config.verifier &&
     typeof config.jettonMasterCodeHash === 'string' &&
     typeof config.tonConnectManifestUrl === 'string';
+}
+
+function validateVerifier(verifier, launchpadCodeHash) {
+  if (!verifier || typeof verifier !== 'object' || Array.isArray(verifier)) throw new Error('Deployment manifest is missing verifier descriptor.');
+  if (verifier.mode === 'inlined') {
+    if (!sha256.test(verifier.sourceSha256 || '')) throw new Error('Deployment manifest inlined verifier sourceSha256 must be a SHA-256 digest.');
+    if (!sha256.test(verifier.launchpadCodeHash || '')) throw new Error('Deployment manifest inlined verifier launchpadCodeHash must be a SHA-256 digest.');
+    if (verifier.launchpadCodeHash !== launchpadCodeHash) throw new Error('Deployment manifest inlined verifier launchpadCodeHash must equal codeHashes.launchpad.');
+    if ('address' in verifier) throw new Error('Deployment manifest inlined verifier must not declare an address.');
+    return;
+  }
+  if (verifier.mode === 'standalone') {
+    if (!tonAddress.test(verifier.address || '')) throw new Error('Deployment manifest standalone verifier address must be a friendly TON address.');
+    if (!sha256.test(verifier.codeHash || '')) throw new Error('Deployment manifest standalone verifier codeHash must be a SHA-256 digest.');
+    return;
+  }
+  throw new Error('Deployment manifest verifier mode must be "inlined" or "standalone".');
 }
 
 export function requireLiveDeployment(config = deploymentConfig) {

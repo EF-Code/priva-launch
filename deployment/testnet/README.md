@@ -24,7 +24,13 @@ Before creating that manifest, the team must provide:
 
 1. a compiled and lifecycle-tested launchpad, factory, adapter, and inlined
    verifier implementation;
-2. exact testnet launchpad, verifier, and jetton-minter deployment addresses and SHA-256 code hashes;
+2. the exact testnet launchpad and jetton-minter deployment addresses and code
+   hashes, plus a verifier descriptor. The current launchpad uses an **inlined**
+   verifier, so it must pin the verifier source digest and require its
+   `launchpadCodeHash` to equal the deployed launchpad code hash. A
+   `verifier.address` is permitted only for a separately deployed authorizer
+   contract that the launchpad actually calls; the standalone proof-checking
+   boundary is not such an authorizer;
 3. a TLS gateway and indexer controlled by the testnet operator;
 4. a public TonConnect manifest URL bound to the testnet UI origin;
 5. the HTTPS token metadata URL and its digest;
@@ -34,14 +40,17 @@ Before creating that manifest, the team must provide:
 
 The runtime manifest must set `status` to `reviewed`, pin the exact 40-character
 source revision, and use canonical friendly TON addresses (`EQ`, `UQ`, `kQ`, or
-`0Q`) for every launchpad, verifier, and DeDust account. The UI rejects an
-otherwise-shaped object before it can open TonConnect.
+`0Q`) for every deployed launchpad, minter, and DeDust account. The UI rejects
+an otherwise-shaped object before it can open TonConnect. For the current
+inlined verifier there is intentionally no verifier address to record.
 
 `observed-deployments.json` records the two actual testnet deployments and
-read-only post-deploy code/data-hash checks. Its `observed-testnet` status is
+read-only post-deploy code/data-hash checks, the inlined verifier source
+digest, and the live TonConnect origin. Its `observed-testnet` status is
 deliberate: it is chain evidence, not a substitute for the runtime manifest.
-The verifier endpoint, public gateway/indexer, and DEX addresses remain
-unfilled until those services and contracts exist.
+There is no separate verifier endpoint for the current inlined design. The
+public gateway/indexer and DEX addresses remain unfilled until those services
+and contracts exist.
 
 Re-check the live public chain state at any time with:
 

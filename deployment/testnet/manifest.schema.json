@@ -3,14 +3,37 @@
   "title": "Priva reviewed testnet deployment manifest",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "network", "status", "sourceRevision", "launchpadAddress", "verifierAddress", "jettonMinterAddress", "gatewayUrl", "indexerUrl", "tonConnectManifestUrl", "metadataUrl", "codeHashes", "circuit", "dex"],
+  "required": ["version", "network", "status", "sourceRevision", "launchpadAddress", "verifier", "jettonMinterAddress", "gatewayUrl", "indexerUrl", "tonConnectManifestUrl", "metadataUrl", "codeHashes", "circuit", "dex"],
   "properties": {
     "version": { "type": "string", "minLength": 1 },
     "network": { "const": "testnet" },
     "status": { "const": "reviewed" },
     "sourceRevision": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
     "launchpadAddress": { "type": "string", "pattern": "^(?:EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$" },
-    "verifierAddress": { "type": "string", "pattern": "^(?:EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$" },
+    "verifier": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "sourceSha256", "launchpadCodeHash"],
+          "properties": {
+            "mode": { "const": "inlined" },
+            "sourceSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            "launchpadCodeHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "address", "codeHash"],
+          "properties": {
+            "mode": { "const": "standalone" },
+            "address": { "type": "string", "pattern": "^(?:EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$" },
+            "codeHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+          }
+        }
+      ]
+    },
     "jettonMinterAddress": { "type": "string", "pattern": "^(?:EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$" },
     "gatewayUrl": { "type": "string", "pattern": "^https://" },
     "indexerUrl": { "type": "string", "pattern": "^https://" },

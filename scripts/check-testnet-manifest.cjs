@@ -11,14 +11,16 @@ function validateTestnetManifest(manifest) {
   if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) throw new Error('Manifest must be an object.');
   if (manifest.network !== 'testnet') throw new Error('Manifest network must be testnet.');
   if (manifest.status !== 'reviewed') throw new Error('Manifest status must be reviewed.');
-  for (const field of ['version', 'launchpadAddress', 'verifierAddress', 'jettonMinterAddress', 'gatewayUrl', 'indexerUrl', 'tonConnectManifestUrl', 'metadataUrl']) {
+  for (const field of ['version', 'launchpadAddress', 'jettonMinterAddress', 'gatewayUrl', 'indexerUrl', 'tonConnectManifestUrl', 'metadataUrl']) {
     if (typeof manifest[field] !== 'string' || manifest[field].trim() === '') throw new Error(`Missing ${field}.`);
   }
-  for (const field of ['launchpadAddress', 'verifierAddress', 'jettonMinterAddress']) if (!tonAddress.test(manifest[field])) throw new Error(`${field} must be a friendly TON address.`);
+  for (const field of ['launchpadAddress', 'jettonMinterAddress']) if (!tonAddress.test(manifest[field])) throw new Error(`${field} must be a friendly TON address.`);
   if (!revision.test(manifest.sourceRevision || '')) throw new Error('sourceRevision must be a full Git SHA.');
   for (const field of ['gatewayUrl', 'indexerUrl', 'tonConnectManifestUrl', 'metadataUrl']) if (!manifest[field].startsWith('https://')) throw new Error(`${field} must use HTTPS.`);
   if (!manifest.codeHashes || typeof manifest.codeHashes !== 'object' || Object.keys(manifest.codeHashes).length === 0) throw new Error('codeHashes must be non-empty.');
   for (const [name, value] of Object.entries(manifest.codeHashes)) if (!sha256.test(value)) throw new Error(`Invalid code hash for ${name}.`);
+  if (!sha256.test(manifest.codeHashes.launchpad || '')) throw new Error('codeHashes.launchpad must pin the deployed launchpad code hash.');
+  validateVerifier(manifest.verifier, manifest.codeHashes.launchpad);
   if (!manifest.circuit || manifest.circuit.version !== 1 || !sha256.test(manifest.circuit.verificationKeyHash || '')) throw new Error('Circuit must pin v1 verificationKeyHash.');
   if (!manifest.dex || manifest.dex.kind !== 'dedust-v2' || !revision.test(manifest.dex.sourceRevision || '')) throw new Error('DEX must pin DeDust v2 and its source revision.');
   for (const field of ['nativeVaultAddress', 'jettonVaultAddress', 'poolAddress']) {
@@ -28,6 +30,29 @@ function validateTestnetManifest(manifest) {
   if (!manifest.dex.codeHashes || typeof manifest.dex.codeHashes !== 'object' || Object.keys(manifest.dex.codeHashes).length === 0) throw new Error('DEX codeHashes must be non-empty.');
   for (const [name, value] of Object.entries(manifest.dex.codeHashes)) if (!sha256.test(value)) throw new Error(`Invalid DEX SHA-256 code hash for ${name}.`);
   return Object.freeze({ ...manifest });
+}
+
+/**
+ * The current launchpad composes the verifier core directly into its code.
+ * A standalone verifier address is only valid when a separately deployed
+ * authorizer contract is actually used by the launchpad; a proof-checking
+ * boundary candidate must never be presented as that authorizer.
+ */
+function validateVerifier(verifier, launchpadCodeHash) {
+  if (!verifier || typeof verifier !== 'object' || Array.isArray(verifier)) throw new Error('Missing verifier descriptor.');
+  if (verifier.mode === 'inlined') {
+    if (!sha256.test(verifier.sourceSha256 || '')) throw new Error('Inlined verifier sourceSha256 must be a SHA-256 digest.');
+    if (!sha256.test(verifier.launchpadCodeHash || '')) throw new Error('Inlined verifier launchpadCodeHash must be a SHA-256 digest.');
+    if (verifier.launchpadCodeHash !== launchpadCodeHash) throw new Error('Inlined verifier launchpadCodeHash must equal codeHashes.launchpad.');
+    if ('address' in verifier) throw new Error('An inlined verifier must not declare a verifier address.');
+    return;
+  }
+  if (verifier.mode === 'standalone') {
+    if (!tonAddress.test(verifier.address || '')) throw new Error('Standalone verifier address must be a friendly TON address.');
+    if (!sha256.test(verifier.codeHash || '')) throw new Error('Standalone verifier codeHash must be a SHA-256 digest.');
+    return;
+  }
+  throw new Error('Verifier mode must be "inlined" or "standalone".');
 }
 
 function readManifest(candidate) {
@@ -45,4 +70,4 @@ if (require.main === module) {
   console.log(`✓ Testnet manifest is structurally valid (${digest})`);
 }
 
-module.exports = { validateTestnetManifest, readManifest };
+module.exports = { validateTestnetManifest, readManifest, validateVerifier };
