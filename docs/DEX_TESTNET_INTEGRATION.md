@@ -1,5 +1,9 @@
 # DEX testnet integration decision
 
+This document describes the optional, later migration profile. The initial
+fixed-price testnet sale deliberately does not use a DEX and is governed by
+the explicit no-migration manifest policy below.
+
 **Selected target:** DeDust volatile pool, native TON + the launch jetton.
 STON.fi v2 is not a fallback target for this launch template. A migration must
 choose one immutable DEX path before deployment; attempting both exposes the
@@ -30,10 +34,18 @@ setup. It therefore is not an interchangeable fallback for a DeDust launch.
 
 ## Testnet manifest additions
 
-The reviewed testnet manifest must now include `dex` with `kind: "dedust-v2"`,
-the exact source revision above (or a newly reviewed replacement), and public
-addresses/code hashes for the native vault, jetton vault, and target pool. All
-three need chain verification before the adapter is allowed to send funds.
+When migration is enabled, the reviewed testnet manifest must include `dex`
+with `kind: "dedust-v2"`, the exact source revision above (or a newly reviewed
+replacement), and public addresses/code hashes for the native vault, jetton
+vault, and target pool. All three need chain verification before the adapter is
+allowed to send funds.
+
+The initial fixed-price testnet profile may instead set
+`{"kind":"none","migration":"disabled","reason":"fixed-price-testnet-sale"}`.
+This is an explicit no-migration policy: it permits sale and refund lifecycle
+testing without claiming graduated trading, and it never enables the
+fail-closed DeDust adapter. Switching to `dedust-v2` is a separate deployment
+and review step.
 
 This document is an ABI integration constraint, not an authorization to deploy
 or transfer testnet value. The adapter remains fail-closed until its complete
